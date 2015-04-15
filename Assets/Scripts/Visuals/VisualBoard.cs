@@ -18,6 +18,10 @@ public class VisualBoard : MonoBehaviour
     private Color[] m_Colors;
 
     private BoardState m_CurrentBoardState = null;
+    public BoardState CurrentBoardState
+    {
+        get { return m_CurrentBoardState; }
+    }
 
     //Not sure why we need this
     private List<VisualTile> m_VisualTiles;
@@ -26,17 +30,23 @@ public class VisualBoard : MonoBehaviour
 
     private void Awake()
     {
-        m_VisualTiles = new List<VisualTile>();
         GenerateHexBoard(6);
+        GenerateUnits();
 
         //Create empty board state
         BoardState boardState = new BoardState();
         boardState.GenerateDefaultState(6);
+
+        m_CurrentBoardState = boardState;
+
         //LoadBoardState(boardState);
     }
 
     private void GenerateHexBoard(int boardSize)
     {
+        if (m_VisualTiles == null) m_VisualTiles = new List<VisualTile>();
+        m_VisualTiles.Clear();
+
         float width = 44;
         float height = 38;
 
@@ -228,32 +238,58 @@ public class VisualBoard : MonoBehaviour
         transform.localScale = new Vector3(0.75f, 0.75f, 1.0f);
     }
 
-    //private void GenerateUnits()
-    //{
-    //    //Black & white
-    //    for (int side = 0; side < 2; ++side)
-    //    {
-    //        //Unit type
-    //        for (int unit = 0; unit < m_UnitAmount.Length; ++unit)
-    //        {
-    //            //Spawn number of units
-    //            for (int i = 0; i < m_UnitAmount[unit]; ++i)
-    //            {
-    //                GameObject obj = GameObject.Instantiate(m_UnitPrefab[unit]) as GameObject;
+    private void GenerateUnits()
+    {
+        if (m_VisualUnits == null) m_VisualUnits = new List<VisualUnit>();
+        m_VisualUnits.Clear();
 
-    //                obj.transform.SetParent(m_VisualTiles[0].transform); //Parent this to the reserve slot
-    //                obj.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+        //6 Mountains, 1 king, 6 Rabble, 2 crossbows, 2 spears, 2 light horse, 2 catapults, 2 elephants, 2 heavy horse, 1 dragon = 26
+        MountainUnitDefinition mountainUnitDefinition = new MountainUnitDefinition();
+        KingUnitDefinition kingUnitDefinition = new KingUnitDefinition();
 
-    //                Color color = Color.white;
-    //                if (side == 1) color = Color.black;
+        int tempTileId = 0;
 
-    //                VisualUnit visualUnit = obj.GetComponent<VisualUnit>();
-    //                visualUnit.SetColor(color);
-    //                m_VisualUnits.Add(visualUnit);
-    //            }
-    //        }
-    //    }
-    //}
+        for (int playerID = 0; playerID < 2; ++playerID)
+        {
+            ////Add mountains
+            //for (int unitID = 0; unitID < mountainUnitDefinition.StartAmount; ++unitID)
+            //{
+            //    GameObject obj = GameObject.Instantiate(m_UnitPrefab[(int)mountainUnitDefinition.UnitType]) as GameObject;
+
+            //    obj.transform.SetParent(m_VisualTiles[tempTileId].transform); //Parent this to the reserve slot
+            //    obj.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+
+            //    Color color = Color.white;
+            //    if (playerID == 1) color = Color.black;
+
+            //    VisualUnit visualUnit = obj.GetComponent<VisualUnit>();
+            //    visualUnit.SetColor(color);
+            //    m_VisualUnits.Add(visualUnit);
+
+            //    ++tempTileId;
+            //}
+
+            //Add a king
+            for (int unitID = 0; unitID < kingUnitDefinition.StartAmount; ++unitID)
+            {
+                GameObject obj = GameObject.Instantiate(m_UnitPrefab[(int)kingUnitDefinition.UnitType]) as GameObject;
+
+                obj.transform.SetParent(m_VisualTiles[tempTileId].transform); //Parent this to the reserve slot
+                obj.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+
+                Color color = Color.white;
+                if (playerID == 1) color = Color.black;
+
+                VisualUnit visualUnit = obj.GetComponent<VisualUnit>();
+                visualUnit.SetColor(color);
+                m_VisualUnits.Add(visualUnit);
+
+                ++tempTileId;
+            }
+
+            //Add ...
+        }
+    }
 
     public void AImove(int unitID, int fromID, int toID)
     {

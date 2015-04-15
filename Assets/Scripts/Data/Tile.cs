@@ -9,6 +9,10 @@ public class Tile
     //   3  \/ 2
     private Tile[] m_Neighbours;
     private Unit m_Unit;
+    public Unit Unit
+    {
+        get { return m_Unit; }
+    }
 
     public Tile()
     {
@@ -39,5 +43,26 @@ public class Tile
     {
         if (id >= m_Neighbours.Length) return null;
         return m_Neighbours[id];
+    }
+
+    public void CountNeighbours(int id, ref int counter, int movesLeft, bool ignoreUnits, bool ignoreMountains, bool recursiveCall = false)
+    {
+        if (movesLeft <= 0) return;
+        
+        //Only do certain checks if this is not the first call
+        if (recursiveCall == true)
+        {
+            if (!ignoreMountains && m_Unit != null && m_Unit.UnitDefinition.UnitType == UnitType.Mountain) return;
+
+            movesLeft -= 1;
+            ++counter;
+
+            if (!ignoreUnits && m_Unit != null) return;
+        }
+
+        if (m_Neighbours[id] != null && movesLeft > 0)
+        {
+            m_Neighbours[id].CountNeighbours(id, ref counter, movesLeft, ignoreUnits, ignoreMountains, true);
+        }
     }
 }
