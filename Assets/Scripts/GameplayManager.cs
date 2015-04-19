@@ -24,6 +24,12 @@ public class GameplayManager : MonoBehaviour
 
     private List<BoardState> m_BoardStates = null;
 
+    private PlayerType m_CurrentPlayer = PlayerType.White;
+    public PlayerType CurrentPlayer
+    {
+        get { return m_CurrentPlayer; }
+    }
+
     //Singleton
     private static GameplayManager m_Instance;
     public static GameplayManager Instance
@@ -51,6 +57,37 @@ public class GameplayManager : MonoBehaviour
 
             m_BoardStates.Add(boardState);
         }
+
+        m_VisualBoard.EnableUnitSelection(m_CurrentPlayer);
+    }
+
+    public void Move()
+    {
+        //A move has been chosen, but not submitted yet!
+        EnableGlobalUnitSelection(false);
+    }
+
+    public void UndoMove()
+    {
+        //Super lame, just reload the board!
+        m_VisualBoard.LoadBoardState(m_VisualBoard.CurrentBoardState);
+        EnableGlobalUnitSelection(true);
+    }
+
+    public void SubmitMove()
+    {
+        m_VisualBoard.SaveBoardState();
+        SwapTurns();
+
+        EnableGlobalUnitSelection(true);
+    }
+
+    public void SwapTurns()
+    {
+        if (m_CurrentPlayer == PlayerType.White) { m_CurrentPlayer = PlayerType.Black; }
+        else                                     { m_CurrentPlayer = PlayerType.White; }
+
+        m_VisualBoard.EnableUnitSelection(m_CurrentPlayer);
     }
 
     public void AIMove()
@@ -60,6 +97,21 @@ public class GameplayManager : MonoBehaviour
             return;
 
         BoardState currentBoardState = m_VisualBoard.CurrentBoardState;
+        currentBoardState.SetCurrentPlayer(m_CurrentPlayer);
+
+        //Calculate all the moves
         currentBoardState.ProcessAllMoves(m_BoardStates);
+        
+        //Now we found our best, let's do that
+        currentBoardState.ProcessBestMove();
+
+        //Load visually & done!
+        m_VisualBoard.LoadBoardState(currentBoardState);
+        SwapTurns();
+    }
+
+    private void EnableGlobalUnitSelection(bool state)
+    {
+        m_VisualBoard.GetComponent<CanvasGroup>().blocksRaycasts = state;
     }
 }

@@ -9,10 +9,11 @@ public class VisualBoard : MonoBehaviour
     private GameObject m_TilePrefab = null;
 
     [SerializeField]
-    private GameObject m_ReserveTilePrefab = null;
-
-    [SerializeField]
     private GameObject[] m_UnitPrefab = null;
+
+    //The reserve tiles (where dead / unused units go)
+    [SerializeField]
+    private VisualTile[] m_ReserveVisualTiles = new VisualTile[2];
 
     [SerializeField]
     private Color[] m_Colors;
@@ -27,9 +28,20 @@ public class VisualBoard : MonoBehaviour
     private List<VisualTile> m_VisualTiles;
     private List<VisualUnit> m_VisualUnits;
 
-
     private void Awake()
     {
+        for (int i = 0; i < 2; ++i)
+        {
+            if (m_ReserveVisualTiles[i] == null)
+            {
+                Debug.LogError("VisualBoard doesn't have a valid reserve tile at slot: " + i);
+            }
+            else
+            {
+                m_ReserveVisualTiles[i].SetID(-1); //-1 means invalid
+            }
+        }
+
         GenerateHexBoard(6);
         GenerateUnits();
 
@@ -39,7 +51,7 @@ public class VisualBoard : MonoBehaviour
 
         m_CurrentBoardState = boardState;
 
-        //LoadBoardState(boardState);
+        LoadBoardState(boardState);
     }
 
     private void GenerateHexBoard(int boardSize)
@@ -51,15 +63,15 @@ public class VisualBoard : MonoBehaviour
         float height = 38;
 
         //Reserve tile
-        GameObject obj = GameObject.Instantiate(m_ReserveTilePrefab) as GameObject;
+        GameObject obj = null; // GameObject.Instantiate(m_ReserveTilePrefab) as GameObject;
 
-        RectTransform rectTransform = obj.GetComponent<RectTransform>();
-        rectTransform.SetParent(transform.parent.GetComponent<RectTransform>());
-        rectTransform.anchoredPosition = new Vector2(0.0f, -175.0f);
-        rectTransform.sizeDelta = new Vector2(1.0f, 170.0f);
-        rectTransform.localScale = new Vector2(1.0f, 1.0f);
+        RectTransform rectTransform = null; //obj.GetComponent<RectTransform>();
+        //rectTransform.SetParent(transform.parent.GetComponent<RectTransform>());
+        //rectTransform.anchoredPosition = new Vector2(0.0f, -175.0f);
+        //rectTransform.sizeDelta = new Vector2(1.0f, 170.0f);
+        //rectTransform.localScale = new Vector2(1.0f, 1.0f);
 
-        m_VisualTiles.Add(obj.GetComponent<VisualTile>());
+        //m_VisualTiles.Add(obj.GetComponent<VisualTile>());
 
         //Calculate board size
         int rowWidth = boardSize;
@@ -82,9 +94,10 @@ public class VisualBoard : MonoBehaviour
                 rectTransform.SetParent(gameObject.GetComponent<RectTransform>()); //Parent this to us
                 rectTransform.anchoredPosition = new Vector2(x, startY);
                 rectTransform.localScale = new Vector2(1.0f, 1.0f); //Always resets for some reason
-                obj.GetComponent<VisualTile>().SetColor(m_Colors[color]);
 
                 VisualTile newTile = obj.GetComponent<VisualTile>();
+                newTile.SetColor(m_Colors[color]);
+                newTile.SetID(m_VisualTiles.Count);
                 m_VisualTiles.Add(newTile);
 
                 x += width;
@@ -234,7 +247,7 @@ public class VisualBoard : MonoBehaviour
             startY -= height;
         }
 
-        gameObject.GetComponent<RectTransform>().anchoredPosition = new Vector3(0.0f, 110.0f);
+        gameObject.GetComponent<RectTransform>().anchoredPosition = new Vector3(0.0f, 40.0f);
         transform.localScale = new Vector3(0.75f, 0.75f, 1.0f);
     }
 
@@ -244,7 +257,7 @@ public class VisualBoard : MonoBehaviour
         m_VisualUnits.Clear();
 
         //6 Mountains, 1 king, 6 Rabble, 2 crossbows, 2 spears, 2 light horse, 2 catapults, 2 elephants, 2 heavy horse, 1 dragon = 26
-        MountainUnitDefinition mountainUnitDefinition = new MountainUnitDefinition();
+        //MountainUnitDefinition mountainUnitDefinition = new MountainUnitDefinition();
         KingUnitDefinition kingUnitDefinition = new KingUnitDefinition();
 
         int tempTileId = 0;
@@ -274,14 +287,18 @@ public class VisualBoard : MonoBehaviour
             {
                 GameObject obj = GameObject.Instantiate(m_UnitPrefab[(int)kingUnitDefinition.UnitType]) as GameObject;
 
-                obj.transform.SetParent(m_VisualTiles[tempTileId].transform); //Parent this to the reserve slot
+                obj.transform.SetParent(m_VisualTiles[tempTileId].transform);
                 obj.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
 
-                Color color = Color.white;
-                if (playerID == 1) color = Color.black;
+                PlayerType playerType = PlayerType.White;
+                if (playerID == 1) playerType = PlayerType.Black;
 
                 VisualUnit visualUnit = obj.GetComponent<VisualUnit>();
-                visualUnit.SetColor(color);
+                visualUnit.SetPlayerType(playerType);
+                visualUnit.SetUnitDefinition(kingUnitDefinition);
+                visualUnit.SetTile(m_VisualTiles[tempTileId]);
+                visualUnit.SetReserveTile(m_ReserveVisualTiles[playerID]);
+
                 m_VisualUnits.Add(visualUnit);
 
                 ++tempTileId;
@@ -291,8 +308,51 @@ public class VisualBoard : MonoBehaviour
         }
     }
 
-    public void AImove(int unitID, int fromID, int toID)
+    public void SaveBoardState()
     {
+        for (int i = 0; i < m_VisualUnits.Count; ++i)
+        {
+            int tileID = m_VisualUnits[i].GetTile().ID;
 
+            Tile currentTile = null;
+            if (tileID != -1)
+            {
+                currentTile = CurrentBoardState.Tiles[tileID];
+                //currentTile.SetUnit(CurrentBoardState.Units[i]);
+            }
+
+            CurrentBoardState.Units[i].SetTile(currentTile);
+        }
+    }
+
+    public void LoadBoardState(BoardState boardState)
+    {
+        //Place all the units
+        for (int i = 0; i < boardState.Units.Count; ++i)
+        {
+            Unit unit = boardState.Units[i];
+            if (unit.GetTile() == null)
+            {
+                m_VisualUnits[i].SetTile(null);
+            }
+            else
+            {
+                VisualTile newTile = m_VisualTiles[unit.GetTile().ID];
+                m_VisualUnits[i].SetTile(newTile);
+            }
+        }
+
+        SaveBoardState();
+    }
+
+    public void EnableUnitSelection(PlayerType playerType)
+    {
+        for (int i = 0; i < m_VisualUnits.Count; ++i)
+        {
+            bool enable = false;
+            if (m_VisualUnits[i].GetPlayerType() == playerType) { enable = true; }
+
+            m_VisualUnits[i].EnableDragging(enable);
+        }
     }
 }

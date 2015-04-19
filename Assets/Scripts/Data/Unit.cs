@@ -109,25 +109,42 @@ public class Unit
         get { return m_Owner; }
     }
 
-    private Tile m_Tile; //The tile we're on
+    private Tile m_Tile; //The tile we're currently on
 
     //Cache so we don't need to check every time
-    private int[] m_MoveCounts = new int[12];
+    private List<Tile>[] m_PossibleMoves = new List<Tile>[BoardState.DIR_NUM];
+
+    private BoardState m_BoardState; //The boardstate we are parented to
 
     //---------------
     // Functions
     //---------------
-    public Unit(UnitDefinition unitDef, PlayerType owner, Tile tile)
+    public Unit(BoardState boardState, UnitDefinition unitDef, PlayerType owner, Tile tile)
     {
+        m_BoardState = boardState;
         m_UnitDefinition = unitDef;
         m_Owner = owner;
         m_Tile = tile;
+
+        for (int i = 0; i < m_PossibleMoves.Length; ++i)
+        {
+            m_PossibleMoves[i] = new List<Tile>(); 
+        }
     }
 
     public void SetTile(Tile tile)
     {
-        //if tile == null, we died or we promoted
+        //Swap tile
+        Tile oldTile = m_Tile;
         m_Tile = tile;
+
+        //Clear our last tile
+        if (oldTile != null && oldTile.GetUnit() == this)
+            oldTile.SetUnit(null);
+
+        //Inform our new tile
+        if (m_Tile != null)
+            m_Tile.SetUnit(this);
     }
 
     public Tile GetTile()
@@ -135,36 +152,53 @@ public class Unit
         return m_Tile;
     }
 
+    //AI
     public void Copy(Unit otherUnit)
     {
-        m_UnitDefinition = otherUnit.UnitDefinition; //This is a reference, but that's not a problem
-        m_Owner = otherUnit.Owner; //Copy
-        m_Tile = null; //Will be set later.
+        m_UnitDefinition = otherUnit.UnitDefinition; //This is a reference, but that's not a problem as it's static data
+        m_Owner = otherUnit.Owner;
+
+        //Clear old unit data 
+        if (m_Tile != null) { m_Tile.SetUnit(null); }
+        m_Tile = null;
+
+        Tile tile = otherUnit.GetTile();
+        if (tile != null)
+        {
+            m_Tile = m_BoardState.GetTile(tile.ID);
+            m_Tile.SetUnit(this);
+        }
+
+        for (int i = 0; i < BoardState.DIR_NUM; ++i)
+        {
+            m_PossibleMoves[i].Clear();
+
+            for (int j = 0; j < otherUnit.m_PossibleMoves[i].Count; ++j)
+            {
+                m_PossibleMoves[i].Add(m_BoardState.GetTile(otherUnit.m_PossibleMoves[i][j].ID));
+            }     
+        }
     }
 
-    //AI
     public int CalculateMovecounts()
     {
         //We calculate all the places we can go
         int totalMoves = 0;
 
-        for (int i = 0; i < 12; ++i) //6 is just the amount of directions
+        for (int i = 0; i < BoardState.DIR_NUM; ++i)
         {
-            m_MoveCounts[i] = 0;
+            m_PossibleMoves[i].Clear();
 
             if (m_Tile == null)
-            {
-                m_MoveCounts[i] = 0;
                 continue;
-            }
 
             int movesLeft = UnitDefinition.OrthogonalMoves;
             if (i >= 6) movesLeft = UnitDefinition.DiagonalMoves;
 
             if (movesLeft > 0)
             {
-                m_Tile.CountNeighbours(i, ref m_MoveCounts[i], movesLeft, UnitDefinition.IgnoreUnits, false);
-                totalMoves += m_MoveCounts[i];
+                m_Tile.CountNeighbours(i, ref m_PossibleMoves[i], movesLeft, UnitDefinition.IgnoreUnits, false);
+                totalMoves += m_PossibleMoves[i].Count;
             }
         }
 
@@ -174,6 +208,29 @@ public class Unit
 
     public void ProcessMove(int id)
     {
-        //Debug.Log("Processing move: " + id);
+        //Figure out which tile to go to
+        //STIJN: Must be done more performant
+        int totalFoundId = 0;
+        Tile foundTile = null;
+        for (int i = 0; i < BoardState.DIR_NUM; ++i)
+        {
+            totalFoundId += m_PossibleMoves[i].Count;
+
+            if (id < totalFoundId && m_PossibleMoves[i].Count != 0)
+            {
+                int diff = totalFoundId - id;
+                foundTile = m_PossibleMoves[i][m_PossibleMoves[i].Count - diff];
+                break;
+            }
+        }
+
+        if (m_Tile != null && foundTile != null)
+        {
+            //Remove ourselves from our old tile
+            m_Tile.SetUnit(null);
+
+            //And go to a new one
+            SetTile(foundTile);
+        }
     }
 }

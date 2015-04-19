@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class Tile
 {
@@ -9,28 +10,35 @@ public class Tile
     //   3  \/ 2
     private Tile[] m_Neighbours;
     private Unit m_Unit;
-    public Unit Unit
+
+    private int m_ID;
+    public int ID
     {
-        get { return m_Unit; }
+        get { return m_ID; }
     }
 
-    public Tile()
+    public Tile(int ID)
     {
-        m_Neighbours = new Tile[12];
+        m_Neighbours = new Tile[BoardState.DIR_NUM];
         m_Unit = null;
+        m_ID = ID;
     }
 
     public void SetUnit(Unit unit)
     {
-        //If this tile wasn't empty, we killed that unit
-        if (m_Unit != null)
+        //Remove our old unit
+        if (m_Unit != null && unit != null)
         {
-            //Illegal move
-            if (m_Unit.Owner == unit.Owner) return;
             m_Unit.SetTile(null);
         }
 
+        //Accept the new
         m_Unit = unit;
+    }
+
+    public Unit GetUnit()
+    {
+        return m_Unit;
     }
 
     public void SetNeightbour(int id, Tile tile)
@@ -45,7 +53,7 @@ public class Tile
         return m_Neighbours[id];
     }
 
-    public void CountNeighbours(int id, ref int counter, int movesLeft, bool ignoreUnits, bool ignoreMountains, bool recursiveCall = false)
+    public void CountNeighbours(int id, ref List<Tile> movealbeTiles, int movesLeft, bool ignoreUnits, bool ignoreMountains, bool recursiveCall = false)
     {
         if (movesLeft <= 0) return;
         
@@ -55,14 +63,14 @@ public class Tile
             if (!ignoreMountains && m_Unit != null && m_Unit.UnitDefinition.UnitType == UnitType.Mountain) return;
 
             movesLeft -= 1;
-            ++counter;
+            movealbeTiles.Add(this);
 
             if (!ignoreUnits && m_Unit != null) return;
         }
 
         if (m_Neighbours[id] != null && movesLeft > 0)
         {
-            m_Neighbours[id].CountNeighbours(id, ref counter, movesLeft, ignoreUnits, ignoreMountains, true);
+            m_Neighbours[id].CountNeighbours(id, ref movealbeTiles, movesLeft, ignoreUnits, ignoreMountains, true);
         }
     }
 }

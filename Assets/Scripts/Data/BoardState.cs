@@ -10,6 +10,14 @@ public enum PlayerType
 
 public class BoardState
 {
+    private struct Move
+    {
+        public int unitID;
+        public int moveID;
+    }
+
+    public static int DIR_NUM = 12;
+
     //List of units (0-25 = white, 26-51 = black)
     private List<Unit> m_Units;
     public List<Unit> Units
@@ -24,7 +32,7 @@ public class BoardState
         get { return m_Tiles; }
     }
 
-    private PlayerType m_CurrentPlayerType; //Min or Max
+    private PlayerType m_CurrentPlayer; //Min or Max (only used for AI)
 
     //Alpha beta pruning
     private int m_Value = 0;
@@ -32,6 +40,8 @@ public class BoardState
     {
         get { return m_Value; }
     }
+
+    private Move m_BestMove = new Move();
 
     private int m_Alpha = 0;
     private int m_Beta = 0;
@@ -53,17 +63,18 @@ public class BoardState
 
         //Calculate board size
         int rowWidth = boardSize;
-        int prevRowWdith = boardSize;
 
         //Rows
+        int tileID = 0;
         for (int i = 0; i < (boardSize * 2) - 1; ++i)
         {
             //Columns
             for (int j = 0; j < rowWidth; ++j)
             {
                 //Create a new tile
-                Tile newTile = new Tile();
+                Tile newTile = new Tile(tileID);
                 m_Tiles.Add(newTile);
+                ++tileID;
 
                 //-----------------------------------------------------------------
                 // Manage neighbours backwards (so we are sure they already exist)
@@ -194,7 +205,7 @@ public class BoardState
         m_Units.Clear();
 
         //6 Mountains, 1 king, 6 Rabble, 2 crossbows, 2 spears, 2 light horse, 2 catapults, 2 elephants, 2 heavy horse, 1 dragon = 26
-        MountainUnitDefinition mountainUnitDefinition = new MountainUnitDefinition();
+        //MountainUnitDefinition mountainUnitDefinition = new MountainUnitDefinition();
         KingUnitDefinition     kingUnitDefinition     = new KingUnitDefinition();
 
 
@@ -210,7 +221,7 @@ public class BoardState
             //Add mountains
             //for (int unitID = 0; unitID < mountainUnitDefinition.StartAmount; ++unitID)
             //{
-            //    newUnit = new Unit(mountainUnitDefinition, owner, m_Tiles[tempTileId]);
+            //    newUnit = new Unit(this, mountainUnitDefinition, owner, m_Tiles[tempTileId]);
             //    m_Units.Add(newUnit);
             //    ++tempTileId;
             //}
@@ -218,7 +229,7 @@ public class BoardState
             //Add a king
             for (int unitID = 0; unitID < kingUnitDefinition.StartAmount; ++unitID)
             {
-                newUnit = new Unit(kingUnitDefinition, owner, m_Tiles[tempTileId]);
+                newUnit = new Unit(this, kingUnitDefinition, owner, m_Tiles[tempTileId]);
                 m_Units.Add(newUnit);
                 ++tempTileId;
             }
@@ -233,18 +244,19 @@ public class BoardState
         int value = 0;
         foreach (Unit unit in m_Units)
         {
-            if (unit.Owner == m_CurrentPlayerType)
+            if (unit.Owner == m_CurrentPlayer && unit.GetTile() != null)
             {
                 value += unit.UnitDefinition.Value;
             }
-            else
+            
+            if (unit.Owner != m_CurrentPlayer && unit.GetTile() != null)
             {
                 value -= unit.UnitDefinition.Value;
             }
         }
 
         //If we're min, invert this value
-        if (m_CurrentPlayerType == PlayerType.White)
+        if (m_CurrentPlayer == PlayerType.White)
         {
             value *= -1;
         }
@@ -252,71 +264,98 @@ public class BoardState
         return value;
     }
 
-    public void CopyUnits(BoardState otherState)
+    public void CopyBoard(BoardState otherState)
     {
         //Loop over all the units
         List<Unit> otherUnits = otherState.Units;
-        List<Tile> otherTiles = otherState.Tiles;
 
-        //Loop over all the tiles
+        //Loop over all the units
         for (int i = 0; i < otherUnits.Count; ++i)
         {
             //Copy the unit data
             m_Units[i].Copy(otherUnits[i]);
-
-            //Set the tile
-            Tile tile = otherUnits[i].GetTile();
-
-            if (tile != null)
-            {
-                //Find the index of the tile this unit was standing on
-                int tileIndex = otherTiles.IndexOf(tile);
-
-                //And use our own tile on that location
-                m_Units[i].SetTile(m_Tiles[tileIndex]);
-            }
         }
     }
 
-    public void ProcessAllMoves(List<BoardState> boardStates)
+    public void ProcessAllMoves(List<BoardState> boardStates, int id = 0)
     {
-        if (boardStates.Count > 0)
+        if (id < boardStates.Count)
         {
             //Get the next boardstate & make it a copy of this one
-            BoardState nextBoardState = boardStates[boardStates.Count - 1];
-            boardStates.RemoveAt(boardStates.Count - 1);
+            BoardState nextBoardState = boardStates[id];
+            ++id;
 
             //Go trough all the units
             for (int i = 0; i < m_Units.Count; ++i)
             {
+                if (m_Units[i].Owner != m_CurrentPlayer)
+                    continue;
+
                 //Calculate all the possible moves, as every move generates a new boardstate
                 int totalMoves = m_Units[i].CalculateMovecounts();
 
                 for (int moveid = 0; moveid < totalMoves; ++moveid)
                 {
-                    nextBoardState.CopyUnits(this);
+                    nextBoardState.CopyBoard(this);
                     nextBoardState.Units[i].ProcessMove(moveid);
-                    //nextBoardState.ProcessAllMoves(boardStates);
+
+                    nextBoardState.SwapCurrentPlayer();
+                    nextBoardState.ProcessAllMoves(boardStates, id);
 
                     //Get the value and make and compare it
                     //NOTE: CURRENTLY EQUALLY GOOD MOVES ARE IGNORED!!!!
-                    //if (m_CurrentPlayerType == PlayerType.White && m_Value > nextBoardState.Value) //min
-                    //{
-                    //    m_Value = nextBoardState.Value;
-                    //}
+                    if (m_CurrentPlayer == PlayerType.White && m_Value > nextBoardState.Value) //min
+                    {
+                        m_Value = nextBoardState.Value;
+                        m_BestMove.moveID = moveid;
+                        m_BestMove.unitID = i;
+                    }
 
-                    //if (m_CurrentPlayerType == PlayerType.Black && m_Value < nextBoardState.Value) //max
-                    //{
-                    //    m_Value = nextBoardState.Value;
-                    //}
+                    if (m_CurrentPlayer == PlayerType.Black && m_Value < nextBoardState.Value) //max
+                    {
+                        m_Value = nextBoardState.Value;
+                        m_BestMove.moveID = moveid;
+                        m_BestMove.unitID = i;
+                    }
                 }
             }
         }
         else
         {
             //Just calculate the board and that's it!
-            EvaluateBoard();
+            m_Value = EvaluateBoard();
         }
+    }
 
+    public void ProcessBestMove()
+    {
+        Units[m_BestMove.unitID].ProcessMove(m_BestMove.moveID);
+    }
+
+    public Tile GetTile(int tileID)
+    {
+        if (tileID < 0 || tileID >= m_Tiles.Count)
+            return null;
+
+        return m_Tiles[tileID];
+    }
+
+    public Unit GetUnit(int unitID)
+    {
+        if (unitID < 0 || unitID >= m_Units.Count)
+            return null;
+
+        return m_Units[unitID];
+    }
+
+    public void SetCurrentPlayer(PlayerType playerType)
+    {
+        m_CurrentPlayer = playerType;
+    }
+
+    public void SwapCurrentPlayer()
+    {
+        if (m_CurrentPlayer == PlayerType.White) { m_CurrentPlayer = PlayerType.Black; }
+        else                                     { m_CurrentPlayer = PlayerType.White; }
     }
 }
