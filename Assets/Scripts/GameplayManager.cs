@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 public enum GameState
 {
@@ -100,8 +101,13 @@ public class GameplayManager : MonoBehaviour
         currentBoardState.SetCurrentPlayer(m_CurrentPlayer);
 
         //Calculate all the moves
+        DateTime time = DateTime.Now;
         currentBoardState.ProcessAllMoves(m_BoardStates);
-        
+        DateTime time2 = DateTime.Now;
+
+        double ms = (time2 - time).TotalMilliseconds;
+        Debug.Log("Processing all the moves for " + m_AIMoveDepth + " moves took " + ms + "ms");
+
         //Now we found our best, let's do that
         currentBoardState.ProcessBestMove();
 

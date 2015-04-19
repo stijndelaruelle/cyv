@@ -238,7 +238,7 @@ public class BoardState
         }
     }
 
-    public int EvaluateBoard()
+    public void EvaluateBoard()
     {
         //Count up all our unit values
         int value = 0;
@@ -261,15 +261,16 @@ public class BoardState
             value *= -1;
         }
 
-        return value;
+        m_Value = value;
     }
 
     public void CopyBoard(BoardState otherState)
     {
-        //Loop over all the units
-        List<Unit> otherUnits = otherState.Units;
+        m_CurrentPlayer = otherState.m_CurrentPlayer;
+        //m_Value = otherState.Value;
 
         //Loop over all the units
+        List<Unit> otherUnits = otherState.Units;
         for (int i = 0; i < otherUnits.Count; ++i)
         {
             //Copy the unit data
@@ -281,6 +282,10 @@ public class BoardState
     {
         if (id < boardStates.Count)
         {
+            //Reset the value to an insane value (the opposite of what we prefer)
+            m_Value = int.MaxValue;
+            if (m_CurrentPlayer == PlayerType.Black) { m_Value *= -1; }
+
             //Get the next boardstate & make it a copy of this one
             BoardState nextBoardState = boardStates[id];
             ++id;
@@ -293,6 +298,10 @@ public class BoardState
 
                 //Calculate all the possible moves, as every move generates a new boardstate
                 int totalMoves = m_Units[i].CalculateMovecounts();
+                if (totalMoves == 0)
+                {
+                    EvaluateBoard();
+                }
 
                 for (int moveid = 0; moveid < totalMoves; ++moveid)
                 {
@@ -323,7 +332,7 @@ public class BoardState
         else
         {
             //Just calculate the board and that's it!
-            m_Value = EvaluateBoard();
+            EvaluateBoard();
         }
     }
 

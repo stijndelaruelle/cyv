@@ -202,7 +202,7 @@ public class Unit
             }
         }
 
-        Debug.Log(m_Owner.ToString() + "'s " + UnitDefinition.UnitType.ToString() + " has " + totalMoves + " possible moves!");
+        //Debug.Log(m_Owner.ToString() + "'s " + UnitDefinition.UnitType.ToString() + " has " + totalMoves + " possible moves!");
         return totalMoves;
     }
 
