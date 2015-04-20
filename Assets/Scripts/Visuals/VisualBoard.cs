@@ -258,53 +258,41 @@ public class VisualBoard : MonoBehaviour
 
         //6 Mountains, 1 king, 6 Rabble, 2 crossbows, 2 spears, 2 light horse, 2 catapults, 2 elephants, 2 heavy horse, 1 dragon = 26
         //MountainUnitDefinition mountainUnitDefinition = new MountainUnitDefinition();
-        KingUnitDefinition kingUnitDefinition = new KingUnitDefinition();
+        List<UnitDefinition> unitDefinitions = new List<UnitDefinition>();
+        unitDefinitions.Add(new KingUnitDefinition());
+        unitDefinitions.Add(new LightHorseUnitDefinition());
+        unitDefinitions.Add(new SpearUnitDefinition());
+        unitDefinitions.Add(new CrossbowUnitDefinition());
 
         int tempTileId = 0;
 
         for (int playerID = 0; playerID < 2; ++playerID)
         {
-            ////Add mountains
-            //for (int unitID = 0; unitID < mountainUnitDefinition.StartAmount; ++unitID)
-            //{
-            //    GameObject obj = GameObject.Instantiate(m_UnitPrefab[(int)mountainUnitDefinition.UnitType]) as GameObject;
-
-            //    obj.transform.SetParent(m_VisualTiles[tempTileId].transform); //Parent this to the reserve slot
-            //    obj.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
-
-            //    Color color = Color.white;
-            //    if (playerID == 1) color = Color.black;
-
-            //    VisualUnit visualUnit = obj.GetComponent<VisualUnit>();
-            //    visualUnit.SetColor(color);
-            //    m_VisualUnits.Add(visualUnit);
-
-            //    ++tempTileId;
-            //}
-
-            //Add a king
-            for (int unitID = 0; unitID < kingUnitDefinition.StartAmount; ++unitID)
+            for (int unitType = 0; unitType < unitDefinitions.Count; ++unitType)
             {
-                GameObject obj = GameObject.Instantiate(m_UnitPrefab[(int)kingUnitDefinition.UnitType]) as GameObject;
+                UnitDefinition unitDefinition = unitDefinitions[unitType];
 
-                obj.transform.SetParent(m_VisualTiles[tempTileId].transform);
-                obj.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+                for (int unitID = 0; unitID < unitDefinition.StartAmount; ++unitID)
+                {
+                    GameObject obj = GameObject.Instantiate(m_UnitPrefab[(int)unitDefinition.UnitType]) as GameObject;
 
-                PlayerType playerType = PlayerType.White;
-                if (playerID == 1) playerType = PlayerType.Black;
+                    obj.transform.SetParent(m_VisualTiles[tempTileId].transform);
+                    obj.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
 
-                VisualUnit visualUnit = obj.GetComponent<VisualUnit>();
-                visualUnit.SetPlayerType(playerType);
-                visualUnit.SetUnitDefinition(kingUnitDefinition);
-                visualUnit.SetTile(m_VisualTiles[tempTileId]);
-                visualUnit.SetReserveTile(m_ReserveVisualTiles[playerID]);
+                    PlayerType playerType = PlayerType.White;
+                    if (playerID == 1) playerType = PlayerType.Black;
 
-                m_VisualUnits.Add(visualUnit);
+                    VisualUnit visualUnit = obj.GetComponent<VisualUnit>();
+                    visualUnit.SetPlayerType(playerType);
+                    visualUnit.SetUnitDefinition(unitDefinition);
+                    visualUnit.SetTile(m_VisualTiles[tempTileId]);
+                    visualUnit.SetReserveTile(m_ReserveVisualTiles[playerID]);
 
-                ++tempTileId;
+                    m_VisualUnits.Add(visualUnit);
+
+                    ++tempTileId;
+                }
             }
-
-            //Add ...
         }
     }
 

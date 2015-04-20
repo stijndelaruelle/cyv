@@ -5,23 +5,23 @@ using UnityEngine.UI;
 
 public enum Direction
 {
-    Ortohonal1,
-    Diagonal1,
+    Diagonal1,  //0 
+    Ortohonal1, //1
 
+    Diagonal2,  //2
     Ortohonal2,
-    Diagonal2,
 
-    Ortohonal3,
     Diagonal3,
+    Ortohonal3,
 
-    Ortohonal4,
     Diagonal4,
+    Ortohonal4,
 
-    Ortohonal5,
     Diagonal5,
+    Ortohonal5,
 
-    Ortohonal6,
     Diagonal6,
+    Ortohonal6,
 }
 
 public class VisualTile : MonoBehaviour, IDropHandler

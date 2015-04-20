@@ -18,7 +18,7 @@ public class BoardState
 
     public static int DIR_NUM = 12;
 
-    //List of units (0-25 = white, 26-51 = black)
+    //List of units (0-x = white, x-(x+x) = black)
     private List<Unit> m_Units;
     public List<Unit> Units
     {
@@ -206,8 +206,11 @@ public class BoardState
 
         //6 Mountains, 1 king, 6 Rabble, 2 crossbows, 2 spears, 2 light horse, 2 catapults, 2 elephants, 2 heavy horse, 1 dragon = 26
         //MountainUnitDefinition mountainUnitDefinition = new MountainUnitDefinition();
-        KingUnitDefinition     kingUnitDefinition     = new KingUnitDefinition();
-
+        List<UnitDefinition> unitDefinitions = new List<UnitDefinition>();
+        unitDefinitions.Add(new KingUnitDefinition());
+        unitDefinitions.Add(new LightHorseUnitDefinition());
+        unitDefinitions.Add(new SpearUnitDefinition());
+        unitDefinitions.Add(new CrossbowUnitDefinition());
 
         PlayerType owner = PlayerType.White;
         Unit newUnit = null;
@@ -218,23 +221,19 @@ public class BoardState
         {
             if (playerID == 1) owner = PlayerType.Black;
 
-            //Add mountains
-            //for (int unitID = 0; unitID < mountainUnitDefinition.StartAmount; ++unitID)
-            //{
-            //    newUnit = new Unit(this, mountainUnitDefinition, owner, m_Tiles[tempTileId]);
-            //    m_Units.Add(newUnit);
-            //    ++tempTileId;
-            //}
-
-            //Add a king
-            for (int unitID = 0; unitID < kingUnitDefinition.StartAmount; ++unitID)
+            //Go trough all the unit types
+            for (int unitType = 0; unitType < unitDefinitions.Count; ++unitType)
             {
-                newUnit = new Unit(this, kingUnitDefinition, owner, m_Tiles[tempTileId]);
-                m_Units.Add(newUnit);
-                ++tempTileId;
-            }
+                UnitDefinition unitDefinition = unitDefinitions[unitType];
 
-            //Add ...
+                //Add the right amount of units
+                for (int unitID = 0; unitID < unitDefinition.StartAmount; ++unitID)
+                {
+                    newUnit = new Unit(this, unitDefinition, owner, m_Tiles[tempTileId]);
+                    m_Units.Add(newUnit);
+                    ++tempTileId;
+                }
+            }
         }
     }
 
@@ -242,18 +241,34 @@ public class BoardState
     {
         //Count up all our unit values
         int value = 0;
+        
         foreach (Unit unit in m_Units)
         {
             if (unit.Owner == m_CurrentPlayer && unit.GetTile() != null)
             {
                 value += unit.UnitDefinition.Value;
+
+                //Aggressive AI, prefer less units (either side)
+                value += m_Units.Count * 100;
+
+                //Defensive AI, prefer more units (either side)
+                //value -= m_Units.Count * 100;
             }
             
             if (unit.Owner != m_CurrentPlayer && unit.GetTile() != null)
             {
                 value -= unit.UnitDefinition.Value;
+
+                //Aggressive AI, prefer less units (either side)
+                value += m_Units.Count * 100;
+
+                //Defensive AI, prefer more units (either side)
+                //value -= m_Units.Count * 100;
             }
         }
+
+        //Defensive AI, prefer more units (either side)
+        //value -= m_Units.Count * 100;
 
         //If we're min, invert this value
         if (m_CurrentPlayer == PlayerType.White)
@@ -300,7 +315,8 @@ public class BoardState
                 int totalMoves = m_Units[i].CalculateMovecounts();
                 if (totalMoves == 0)
                 {
-                    EvaluateBoard();
+                    //EvaluateBoard();
+                    continue;
                 }
 
                 for (int moveid = 0; moveid < totalMoves; ++moveid)

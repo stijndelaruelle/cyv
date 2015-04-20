@@ -7,12 +7,12 @@ public enum UnitType
     Mountain,
     King,
     Rabble,
-    Crossbow,
-    Spear,
     LightHorse,
-    Catapult,
-    Elephant,
+    Spear,
+    Crossbow,
     HeavyHorse,
+    Elephant,
+    Catapult,
     Dragon
 }
 
@@ -85,11 +85,51 @@ public class KingUnitDefinition : UnitDefinition
         m_DiagonalMoves = 1;
         m_Value = 9999; //overrules all, meaning that if we can take the king the AI will always prefer it
 
-        m_StartAmount = 1;
+        m_StartAmount = 0;
         m_MaxAmount = 1;
     }
+}
 
-    //Special stuff
+public class LightHorseUnitDefinition : UnitDefinition
+{
+    public LightHorseUnitDefinition()
+    {
+        m_UnitType = UnitType.LightHorse;
+        m_OrthogonalMoves = 2;
+        m_DiagonalMoves = 0;
+        m_Value = 3;
+
+        m_StartAmount = 2;
+        m_MaxAmount = 2;
+    }
+}
+
+public class SpearUnitDefinition : UnitDefinition
+{
+    public SpearUnitDefinition()
+    {
+        m_UnitType = UnitType.Spear;
+        m_OrthogonalMoves = 0;
+        m_DiagonalMoves = 1;
+        m_Value = 3;
+
+        m_StartAmount = 2;
+        m_MaxAmount = 2;
+    }
+}
+
+public class CrossbowUnitDefinition : UnitDefinition
+{
+    public CrossbowUnitDefinition()
+    {
+        m_UnitType = UnitType.Crossbow;
+        m_OrthogonalMoves = 1;
+        m_DiagonalMoves = 0;
+        m_Value = 3;
+
+        m_StartAmount = 0;
+        m_MaxAmount = 2;
+    }
 }
 
 public class Unit
@@ -183,18 +223,16 @@ public class Unit
     public int CalculateMovecounts()
     {
         //We calculate all the places we can go
-        int totalMoves = 0;
+        if (m_Tile == null) return 0;
 
+        int totalMoves = 0;
         for (int i = 0; i < BoardState.DIR_NUM; ++i)
         {
             m_PossibleMoves[i].Clear();
 
-            if (m_Tile == null)
-                continue;
-
             int movesLeft = UnitDefinition.OrthogonalMoves;
-            if (i >= 6) movesLeft = UnitDefinition.DiagonalMoves;
-
+            if (i % 2 == 0) movesLeft = UnitDefinition.DiagonalMoves; //Even directions are diagonal
+            
             if (movesLeft > 0)
             {
                 m_Tile.CountNeighbours(i, ref m_PossibleMoves[i], movesLeft, UnitDefinition.IgnoreUnits, false);
