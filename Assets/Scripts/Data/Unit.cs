@@ -25,16 +25,16 @@ public class UnitDefinition
         get { return m_UnitType; }
     }
 
-    protected int m_OrthogonalMoves = 0; //-1 = infinite
-    public int OrthogonalMoves
+    protected int[] m_MaxMoveCount = new int[BoardState.DIR_NUM]; //-1 = infinite
+    public int GetMoveCount(int dir, PlayerType playerType)
     {
-        get { return m_OrthogonalMoves; }
-    }
+        //These are as seen from the white player (upwards, flip around for the other player)
+        if (playerType == PlayerType.Black) { dir += 6; }
 
-    protected int m_DiagonalMoves = 0; //-1 = infinite
-    public int DiagonalMoves
-    {
-        get { return m_DiagonalMoves; }
+        if (dir >= BoardState.DIR_NUM) { dir -= BoardState.DIR_NUM; }
+        if (dir < 0)                   { dir += BoardState.DIR_NUM; }
+
+        return m_MaxMoveCount[dir];
     }
 
     protected int m_Value = 0; //Value used in the board value calculations
@@ -67,11 +67,14 @@ public class MountainUnitDefinition : UnitDefinition
     public MountainUnitDefinition()
     {
         m_UnitType = UnitType.Mountain;
-        m_OrthogonalMoves = 0;
-        m_DiagonalMoves = 0;
         m_Value = 0;
 
-        m_StartAmount = 6;
+        for (int i = 0; i < m_MaxMoveCount.Length; ++i)
+        {
+            m_MaxMoveCount[i] = 0;
+        }
+
+        m_StartAmount = 0;
         m_MaxAmount = 6;
     }
 }
@@ -81,12 +84,39 @@ public class KingUnitDefinition : UnitDefinition
     public KingUnitDefinition()
     {
         m_UnitType = UnitType.King;
-        m_OrthogonalMoves = 1;
-        m_DiagonalMoves = 1;
         m_Value = 9999; //overrules all, meaning that if we can take the king the AI will always prefer it
+
+        for (int i = 0; i < m_MaxMoveCount.Length; ++i)
+        {
+            m_MaxMoveCount[i] = 1;
+        }
 
         m_StartAmount = 1;
         m_MaxAmount = 1;
+    }
+}
+
+public class RabbleUnitDefinition : UnitDefinition
+{
+    public RabbleUnitDefinition()
+    {
+        m_UnitType = UnitType.Rabble;
+        m_Value = 1;
+
+        for (int i = 0; i < m_MaxMoveCount.Length; ++i)
+        {
+            if (i == (int)Direction.Ortohonal1 || i == (int)Direction.Ortohonal6)
+            {
+                m_MaxMoveCount[i] = 1;
+            }
+            else
+            {
+                m_MaxMoveCount[i] = 0;
+            }  
+        }
+
+        m_StartAmount = 0;
+        m_MaxAmount = 6;
     }
 }
 
@@ -95,9 +125,16 @@ public class LightHorseUnitDefinition : UnitDefinition
     public LightHorseUnitDefinition()
     {
         m_UnitType = UnitType.LightHorse;
-        m_OrthogonalMoves = 2;
-        m_DiagonalMoves = 0;
         m_Value = 3;
+
+        for (int i = 0; i < m_MaxMoveCount.Length; ++i)
+        {
+            //Diagonal
+            if (i % 2 == 0) { m_MaxMoveCount[i] = 0; }
+
+            //Orthogonal
+            else { m_MaxMoveCount[i] = 2; }
+        }
 
         m_StartAmount = 2;
         m_MaxAmount = 2;
@@ -109,9 +146,16 @@ public class SpearUnitDefinition : UnitDefinition
     public SpearUnitDefinition()
     {
         m_UnitType = UnitType.Spear;
-        m_OrthogonalMoves = 0;
-        m_DiagonalMoves = 1;
         m_Value = 3;
+
+        for (int i = 0; i < m_MaxMoveCount.Length; ++i)
+        {
+            //Diagonal
+            if (i % 2 == 0) { m_MaxMoveCount[i] = 1; }
+
+            //Orthogonal
+            else { m_MaxMoveCount[i] = 0; }
+        }
 
         m_StartAmount = 0;
         m_MaxAmount = 2;
@@ -123,9 +167,80 @@ public class CrossbowUnitDefinition : UnitDefinition
     public CrossbowUnitDefinition()
     {
         m_UnitType = UnitType.Crossbow;
-        m_OrthogonalMoves = 1;
-        m_DiagonalMoves = 0;
         m_Value = 3;
+
+        for (int i = 0; i < m_MaxMoveCount.Length; ++i)
+        {
+            //Diagonal
+            if (i % 2 == 0) { m_MaxMoveCount[i] = 1; }
+
+            //Orthogonal
+            else { m_MaxMoveCount[i] = 0; }
+
+        }
+        m_StartAmount = 0;
+        m_MaxAmount = 2;
+    }
+}
+
+public class HeavyHorseUnitDefinition : UnitDefinition
+{
+    public HeavyHorseUnitDefinition()
+    {
+        m_UnitType = UnitType.HeavyHorse;
+        m_Value = 5;
+
+        for (int i = 0; i < m_MaxMoveCount.Length; ++i)
+        {
+            //Diagonal
+            if (i % 2 == 0) { m_MaxMoveCount[i] = 0; }
+
+            //Orthogonal
+            else { m_MaxMoveCount[i] = 9999; }
+        }
+
+        m_StartAmount = 0;
+        m_MaxAmount = 2;
+    }
+}
+
+public class ElephantUnitDefinition : UnitDefinition
+{
+    public ElephantUnitDefinition()
+    {
+        m_UnitType = UnitType.Elephant;
+        m_Value = 5;
+
+        for (int i = 0; i < m_MaxMoveCount.Length; ++i)
+        {
+            //Diagonal
+            if (i % 2 == 0) { m_MaxMoveCount[i] = 9999; }
+
+            //Orthogonal
+            else { m_MaxMoveCount[i] = 0; }
+        }
+
+        m_StartAmount = 0;
+        m_MaxAmount = 2;
+    }
+}
+
+public class CatapultUnitDefinition : UnitDefinition
+{
+    public CatapultUnitDefinition()
+    {
+        m_UnitType = UnitType.Catapult;
+        m_Value = 5;
+
+        for (int i = 0; i < m_MaxMoveCount.Length; ++i)
+        {
+            //Diagonal
+            if (i % 2 == 0) { m_MaxMoveCount[i] = 9999; }
+
+            //Orthogonal
+            else { m_MaxMoveCount[i] = 0; }
+
+        }
 
         m_StartAmount = 0;
         m_MaxAmount = 2;
@@ -230,9 +345,7 @@ public class Unit
         {
             m_PossibleMoves[i].Clear();
 
-            int movesLeft = UnitDefinition.OrthogonalMoves;
-            if (i % 2 == 0) movesLeft = UnitDefinition.DiagonalMoves; //Even directions are diagonal
-            
+            int movesLeft = UnitDefinition.GetMoveCount(i, m_Owner);        
             if (movesLeft > 0)
             {
                 m_Tile.CountNeighbours(i, ref m_PossibleMoves[i], movesLeft, UnitDefinition.IgnoreUnits, false, m_Owner);
@@ -240,7 +353,6 @@ public class Unit
             }
         }
 
-        //Debug.Log(m_Owner.ToString() + "'s " + UnitDefinition.UnitType.ToString() + " has " + totalMoves + " possible moves!");
         return totalMoves;
     }
 
@@ -254,7 +366,7 @@ public class Unit
         {
             totalFoundId += m_PossibleMoves[i].Count;
 
-            if (id < totalFoundId && m_PossibleMoves[i].Count != 0)
+            if (id < totalFoundId && m_PossibleMoves[i].Count > 0)
             {
                 int diff = totalFoundId - id;
                 foundTile = m_PossibleMoves[i][m_PossibleMoves[i].Count - diff];

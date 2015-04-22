@@ -217,10 +217,15 @@ public class BoardState
         //6 Mountains, 1 king, 6 Rabble, 2 crossbows, 2 spears, 2 light horse, 2 catapults, 2 elephants, 2 heavy horse, 1 dragon = 26
         //MountainUnitDefinition mountainUnitDefinition = new MountainUnitDefinition();
         List<UnitDefinition> unitDefinitions = new List<UnitDefinition>();
+        unitDefinitions.Add(new MountainUnitDefinition());
         unitDefinitions.Add(new KingUnitDefinition());
+        unitDefinitions.Add(new RabbleUnitDefinition());
         unitDefinitions.Add(new LightHorseUnitDefinition());
         unitDefinitions.Add(new SpearUnitDefinition());
         unitDefinitions.Add(new CrossbowUnitDefinition());
+        unitDefinitions.Add(new HeavyHorseUnitDefinition());
+        unitDefinitions.Add(new ElephantUnitDefinition());
+        unitDefinitions.Add(new CatapultUnitDefinition());
 
         PlayerType owner = PlayerType.White;
         Unit newUnit = null;
@@ -254,25 +259,41 @@ public class BoardState
         
         foreach (Unit unit in m_Units)
         {
-            if (unit.Owner == m_CurrentPlayer && unit.GetTile() != null)
+            if (unit.Owner == m_CurrentPlayer)
             {
-                value += unit.UnitDefinition.Value;
+                if (unit.GetTile() != null)
+                {
+                    value += unit.UnitDefinition.Value;
 
-                //Aggressive AI, prefer our own units less than theirs
-                //value -= unit.UnitDefinition.Value + 1;
+                    //Aggressive AI, prefer our own units less than theirs
+                    //value -= unit.UnitDefinition.Value + 1;
 
-                //Defensive AI, prefer our own units more than theirs
-                //value += 1;
+                    //Defensive AI, prefer our own units more than theirs
+                    //value += 1;
+                }
+
+                //Losing the king gives such a huge failure, it's impossible to ignore
+                else if (unit.UnitDefinition.UnitType == UnitType.King && unit.GetTile() == null)
+                {
+                    value -= 99999;
+                }
             }
             
-            if (unit.Owner != m_CurrentPlayer && unit.GetTile() != null)
+            if (unit.Owner != m_CurrentPlayer)
             {
-                value -= unit.UnitDefinition.Value;
+                if (unit.GetTile() != null)
+                {
+                    value -= unit.UnitDefinition.Value;
+                }
+
+                //Killing the king gives such a huge boost, it's impossible to ignore
+                //Points are bigger than losing your own king, as that simply doesn't matter anymore
+                else if (unit.UnitDefinition.UnitType == UnitType.King && unit.GetTile() == null)
+                {
+                    value += 9999999;
+                }
             }
         }
-
-        //Defensive AI, prefer more units (either side)
-        //value -= m_Units.Count * 100;
 
         //If we're min, invert this value
         if (m_CurrentPlayer == PlayerType.White)
@@ -320,7 +341,7 @@ public class BoardState
 
                 //Calculate all the possible moves, as every move generates a new boardstate
                 int totalMoves = m_Units[i].CalculateMovecounts();
-                
+
                 if (totalMoves == 0)
                     //Cancels out dead units, but when there are no more units alive the value will have the max or min value (not a problem, just be aware)
                     continue;
@@ -351,7 +372,12 @@ public class BoardState
                         //Later used to resolve a tie
                         int movesTillValue = id;
                         if (m_Value == int.MaxValue || m_Value == int.MinValue) { m_Value = EvaluateBoard(); }
-                        
+
+                        if (id == 1)
+                        {
+                            Debug.Log("");
+                        }
+
                         //If the value is exactly the same as ours, then we didn't even need that extra move
                         if (m_Value == nextBoardState.Value)
                         {
@@ -368,6 +394,11 @@ public class BoardState
                         goodMoves.Add(new Move(i, moveid, nextBoardState.Value, movesTillValue));
                     }
                 }
+            }
+
+            if (id == 1)
+            {
+                Debug.Log("");
             }
 
             //Now we have all the good moves, determine our favourite

@@ -256,13 +256,17 @@ public class VisualBoard : MonoBehaviour
         if (m_VisualUnits == null) m_VisualUnits = new List<VisualUnit>();
         m_VisualUnits.Clear();
 
-        //6 Mountains, 1 king, 6 Rabble, 2 crossbows, 2 spears, 2 light horse, 2 catapults, 2 elephants, 2 heavy horse, 1 dragon = 26
         //MountainUnitDefinition mountainUnitDefinition = new MountainUnitDefinition();
         List<UnitDefinition> unitDefinitions = new List<UnitDefinition>();
+        unitDefinitions.Add(new MountainUnitDefinition());
         unitDefinitions.Add(new KingUnitDefinition());
+        unitDefinitions.Add(new RabbleUnitDefinition());
         unitDefinitions.Add(new LightHorseUnitDefinition());
         unitDefinitions.Add(new SpearUnitDefinition());
         unitDefinitions.Add(new CrossbowUnitDefinition());
+        unitDefinitions.Add(new HeavyHorseUnitDefinition());
+        unitDefinitions.Add(new ElephantUnitDefinition());
+        unitDefinitions.Add(new CatapultUnitDefinition());
 
         int tempTileId = 0;
 

@@ -77,27 +77,9 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         //Show movement range
         if (m_Tile != null && m_UnitDefinition != null)
         {
-            int orthMoves = m_UnitDefinition.OrthogonalMoves;
-            int diagMoves = m_UnitDefinition.DiagonalMoves;
-
-            if (orthMoves > 0)
+            for (int i = 0; i < BoardState.DIR_NUM; ++i)
             {
-                m_Tile.HighlightNeighbour((int)Direction.Ortohonal1, enable, orthMoves, false, m_PlayerType);
-                m_Tile.HighlightNeighbour((int)Direction.Ortohonal2, enable, orthMoves, false, m_PlayerType);
-                m_Tile.HighlightNeighbour((int)Direction.Ortohonal3, enable, orthMoves, false, m_PlayerType);
-                m_Tile.HighlightNeighbour((int)Direction.Ortohonal4, enable, orthMoves, false, m_PlayerType);
-                m_Tile.HighlightNeighbour((int)Direction.Ortohonal5, enable, orthMoves, false, m_PlayerType);
-                m_Tile.HighlightNeighbour((int)Direction.Ortohonal6, enable, orthMoves, false, m_PlayerType);
-            }
-
-            if (diagMoves > 0)
-            {
-                m_Tile.HighlightNeighbour((int)Direction.Diagonal1, enable, diagMoves, false, m_PlayerType);
-                m_Tile.HighlightNeighbour((int)Direction.Diagonal2, enable, diagMoves, false, m_PlayerType);
-                m_Tile.HighlightNeighbour((int)Direction.Diagonal3, enable, diagMoves, false, m_PlayerType);
-                m_Tile.HighlightNeighbour((int)Direction.Diagonal4, enable, diagMoves, false, m_PlayerType);
-                m_Tile.HighlightNeighbour((int)Direction.Diagonal5, enable, diagMoves, false, m_PlayerType);
-                m_Tile.HighlightNeighbour((int)Direction.Diagonal6, enable, diagMoves, false, m_PlayerType);
+                m_Tile.HighlightNeighbour(i, enable, m_UnitDefinition.GetMoveCount(i, m_PlayerType), false, m_PlayerType);
             }
         }
     }
