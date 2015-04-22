@@ -53,7 +53,7 @@ public class Tile
         return m_Neighbours[id];
     }
 
-    public void CountNeighbours(int id, ref List<Tile> movealbeTiles, int movesLeft, bool ignoreUnits, bool ignoreMountains, bool recursiveCall = false)
+    public void CountNeighbours(int id, ref List<Tile> movealbeTiles, int movesLeft, bool ignoreUnits, bool ignoreMountains, PlayerType playerType, bool recursiveCall = false)
     {
         if (movesLeft <= 0) return;
         
@@ -62,15 +62,25 @@ public class Tile
         {
             if (!ignoreMountains && m_Unit != null && m_Unit.UnitDefinition.UnitType == UnitType.Mountain) return;
 
+            //Dissallow units
+            if (!ignoreUnits && m_Unit != null)
+            {
+                //Don't even include this tile if the unit is from the same player
+                if (m_Unit.Owner != playerType)
+                {
+                    movesLeft -= 1;
+                    movealbeTiles.Add(this);
+                }
+                return;
+            }
+
             movesLeft -= 1;
             movealbeTiles.Add(this);
-
-            if (!ignoreUnits && m_Unit != null) return;
         }
 
         if (m_Neighbours[id] != null && movesLeft > 0)
         {
-            m_Neighbours[id].CountNeighbours(id, ref movealbeTiles, movesLeft, ignoreUnits, ignoreMountains, true);
+            m_Neighbours[id].CountNeighbours(id, ref movealbeTiles, movesLeft, ignoreUnits, ignoreMountains, playerType, true);
         }
     }
 }

@@ -61,7 +61,7 @@ public class VisualTile : MonoBehaviour, IDropHandler
         return m_Neighbours[dir];
     }
 
-    public void HighlightNeighbour(int dir, bool enable, int movesLeft, bool ignoreUnits, bool recursiveCall = false)
+    public void HighlightNeighbour(int dir, bool enable, int movesLeft, bool ignoreUnits, PlayerType playerType, bool recursiveCall = false)
     {
         m_IsHighlighted = enable;
 
@@ -72,13 +72,24 @@ public class VisualTile : MonoBehaviour, IDropHandler
         //Only do certain checks if this is not the first call
         if (recursiveCall == true)
         {
-            if (!ignoreUnits && transform.childCount != 0) return;
+            if (!ignoreUnits && transform.childCount != 0)
+            {
+                VisualUnit visualUnit = transform.GetChild(0).GetComponent<VisualUnit>();
+                if (visualUnit != null && visualUnit.GetPlayerType() == playerType)
+                {
+                    //This is a unit of the same type, don't go here
+                    m_IsHighlighted = false;
+                    SetColor(m_OriginalColor);
+                }
+                return;
+            }
+
             movesLeft -= 1;
         }
 
         if (m_Neighbours[dir] != null && movesLeft > 0)
         {
-            m_Neighbours[dir].HighlightNeighbour(dir, enable, movesLeft, ignoreUnits, true);
+            m_Neighbours[dir].HighlightNeighbour(dir, enable, movesLeft, ignoreUnits, playerType, true);
         }
     }
 
@@ -110,6 +121,13 @@ public class VisualTile : MonoBehaviour, IDropHandler
             }
             else
             {
+                //Only count as a "move" if we moved to a different tile
+                if (this == VisualUnit.m_DraggedUnit.GetTile())
+                {
+                    VisualUnit.m_DraggedUnit.SetTile(this);
+                    return;
+                }
+
                 //If we already have a child (which means we already hold a unit), make that move to the corresponding reserve tile
                 if (transform.childCount > 0)
                 {
@@ -117,8 +135,13 @@ public class VisualTile : MonoBehaviour, IDropHandler
                     if (currentUnit != null) { currentUnit.SetTile(null); }
                 }
 
+                //Only count as a "move" if we moved to a different tile
+                if (this != VisualUnit.m_DraggedUnit.GetTile())
+                {
+                    GameplayManager.Instance.Move();
+                }
+
                 VisualUnit.m_DraggedUnit.SetTile(this);
-                GameplayManager.Instance.Move();
             }
         }
     }

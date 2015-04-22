@@ -85,7 +85,7 @@ public class KingUnitDefinition : UnitDefinition
         m_DiagonalMoves = 1;
         m_Value = 9999; //overrules all, meaning that if we can take the king the AI will always prefer it
 
-        m_StartAmount = 0;
+        m_StartAmount = 1;
         m_MaxAmount = 1;
     }
 }
@@ -113,7 +113,7 @@ public class SpearUnitDefinition : UnitDefinition
         m_DiagonalMoves = 1;
         m_Value = 3;
 
-        m_StartAmount = 2;
+        m_StartAmount = 0;
         m_MaxAmount = 2;
     }
 }
@@ -235,7 +235,7 @@ public class Unit
             
             if (movesLeft > 0)
             {
-                m_Tile.CountNeighbours(i, ref m_PossibleMoves[i], movesLeft, UnitDefinition.IgnoreUnits, false);
+                m_Tile.CountNeighbours(i, ref m_PossibleMoves[i], movesLeft, UnitDefinition.IgnoreUnits, false, m_Owner);
                 totalMoves += m_PossibleMoves[i].Count;
             }
         }

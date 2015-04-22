@@ -17,12 +17,15 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     public void Select(VisualUnit unit)
     {
         if (m_DraggedUnit != null) { m_DraggedUnit.Deselect(); }
+
+        transform.localScale = new Vector3(2.0f, 2.0f, 2.0f);
         m_DraggedUnit = unit;
     }
 
     public void Deselect()
     {
         m_DraggedUnit.ShowMovementRange(false);
+        transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
     }
 
     public void SetTile(VisualTile tile)
@@ -79,22 +82,22 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
 
             if (orthMoves > 0)
             {
-                m_Tile.HighlightNeighbour((int)Direction.Ortohonal1, enable, orthMoves, false);
-                m_Tile.HighlightNeighbour((int)Direction.Ortohonal2, enable, orthMoves, false);
-                m_Tile.HighlightNeighbour((int)Direction.Ortohonal3, enable, orthMoves, false);
-                m_Tile.HighlightNeighbour((int)Direction.Ortohonal4, enable, orthMoves, false);
-                m_Tile.HighlightNeighbour((int)Direction.Ortohonal5, enable, orthMoves, false);
-                m_Tile.HighlightNeighbour((int)Direction.Ortohonal6, enable, orthMoves, false);
+                m_Tile.HighlightNeighbour((int)Direction.Ortohonal1, enable, orthMoves, false, m_PlayerType);
+                m_Tile.HighlightNeighbour((int)Direction.Ortohonal2, enable, orthMoves, false, m_PlayerType);
+                m_Tile.HighlightNeighbour((int)Direction.Ortohonal3, enable, orthMoves, false, m_PlayerType);
+                m_Tile.HighlightNeighbour((int)Direction.Ortohonal4, enable, orthMoves, false, m_PlayerType);
+                m_Tile.HighlightNeighbour((int)Direction.Ortohonal5, enable, orthMoves, false, m_PlayerType);
+                m_Tile.HighlightNeighbour((int)Direction.Ortohonal6, enable, orthMoves, false, m_PlayerType);
             }
 
             if (diagMoves > 0)
             {
-                m_Tile.HighlightNeighbour((int)Direction.Diagonal1, enable, diagMoves, false);
-                m_Tile.HighlightNeighbour((int)Direction.Diagonal2, enable, diagMoves, false);
-                m_Tile.HighlightNeighbour((int)Direction.Diagonal3, enable, diagMoves, false);
-                m_Tile.HighlightNeighbour((int)Direction.Diagonal4, enable, diagMoves, false);
-                m_Tile.HighlightNeighbour((int)Direction.Diagonal5, enable, diagMoves, false);
-                m_Tile.HighlightNeighbour((int)Direction.Diagonal6, enable, diagMoves, false);
+                m_Tile.HighlightNeighbour((int)Direction.Diagonal1, enable, diagMoves, false, m_PlayerType);
+                m_Tile.HighlightNeighbour((int)Direction.Diagonal2, enable, diagMoves, false, m_PlayerType);
+                m_Tile.HighlightNeighbour((int)Direction.Diagonal3, enable, diagMoves, false, m_PlayerType);
+                m_Tile.HighlightNeighbour((int)Direction.Diagonal4, enable, diagMoves, false, m_PlayerType);
+                m_Tile.HighlightNeighbour((int)Direction.Diagonal5, enable, diagMoves, false, m_PlayerType);
+                m_Tile.HighlightNeighbour((int)Direction.Diagonal6, enable, diagMoves, false, m_PlayerType);
             }
         }
     }
@@ -113,13 +116,17 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     {
         Select(this);
         ShowMovementRange(true);
+
+        //Loosen from field so we always render on top!
+        transform.SetParent(transform.parent.transform.parent);
     }
 
     //IBeginDragHandler
     public void OnBeginDrag(PointerEventData eventData)
     {
+        Debug.Log("Begin Drag!");
         //Loosen from field so we always render on top!
-        transform.SetParent(transform.parent.transform.parent);
+        //transform.SetParent(transform.parent.transform.parent);
 
         GetComponent<CanvasGroup>().blocksRaycasts = false;
     }
@@ -133,6 +140,7 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     //IEndDragHandler
     public void OnEndDrag(PointerEventData eventData)
     {
+        Debug.Log("End Drag!");
         Select(null);
         GetComponent<CanvasGroup>().blocksRaycasts = true;
 

@@ -12,8 +12,18 @@ public class BoardState
 {
     private struct Move
     {
+        public Move(int newUnitID, int newMoveID, int newValue, int newMovesTillValue)
+        {
+            unitID = newUnitID;
+            moveID = newMoveID;
+            value = newValue;
+            movesTillValue = newMovesTillValue;
+        }
+
         public int unitID;
         public int moveID;
+        public int value;
+        public int movesTillValue;
     }
 
     public static int DIR_NUM = 12;
@@ -237,7 +247,7 @@ public class BoardState
         }
     }
 
-    public void EvaluateBoard()
+    public int EvaluateBoard()
     {
         //Count up all our unit values
         int value = 0;
@@ -248,22 +258,16 @@ public class BoardState
             {
                 value += unit.UnitDefinition.Value;
 
-                //Aggressive AI, prefer less units (either side)
-                value += m_Units.Count * 100;
+                //Aggressive AI, prefer our own units less than theirs
+                //value -= unit.UnitDefinition.Value + 1;
 
-                //Defensive AI, prefer more units (either side)
-                //value -= m_Units.Count * 100;
+                //Defensive AI, prefer our own units more than theirs
+                //value += 1;
             }
             
             if (unit.Owner != m_CurrentPlayer && unit.GetTile() != null)
             {
                 value -= unit.UnitDefinition.Value;
-
-                //Aggressive AI, prefer less units (either side)
-                value += m_Units.Count * 100;
-
-                //Defensive AI, prefer more units (either side)
-                //value -= m_Units.Count * 100;
             }
         }
 
@@ -276,7 +280,7 @@ public class BoardState
             value *= -1;
         }
 
-        m_Value = value;
+        return value;
     }
 
     public void CopyBoard(BoardState otherState)
@@ -301,6 +305,9 @@ public class BoardState
             m_Value = int.MaxValue;
             if (m_CurrentPlayer == PlayerType.Black) { m_Value *= -1; }
 
+            List<Move> goodMoves = new List<Move>();
+            int ownMovesTillValue = id;
+
             //Get the next boardstate & make it a copy of this one
             BoardState nextBoardState = boardStates[id];
             ++id;
@@ -313,11 +320,10 @@ public class BoardState
 
                 //Calculate all the possible moves, as every move generates a new boardstate
                 int totalMoves = m_Units[i].CalculateMovecounts();
+                
                 if (totalMoves == 0)
-                {
-                    //EvaluateBoard();
+                    //Cancels out dead units, but when there are no more units alive the value will have the max or min value (not a problem, just be aware)
                     continue;
-                }
 
                 for (int moveid = 0; moveid < totalMoves; ++moveid)
                 {
@@ -328,19 +334,66 @@ public class BoardState
                     nextBoardState.ProcessAllMoves(boardStates, id);
 
                     //Get the value and make and compare it
-                    //NOTE: CURRENTLY EQUALLY GOOD MOVES ARE IGNORED!!!!
-                    if (m_CurrentPlayer == PlayerType.White && m_Value > nextBoardState.Value) //min
+                    bool addMove = false;
+                    if (m_CurrentPlayer == PlayerType.White && m_Value >= nextBoardState.Value) //min
                     {
-                        m_Value = nextBoardState.Value;
-                        m_BestMove.moveID = moveid;
-                        m_BestMove.unitID = i;
+                        addMove = true;
                     }
 
-                    if (m_CurrentPlayer == PlayerType.Black && m_Value < nextBoardState.Value) //max
+                    if (m_CurrentPlayer == PlayerType.Black && m_Value <= nextBoardState.Value) //max
                     {
+                        addMove = true;
+                    }
+
+                    if (addMove)
+                    {
+                        //Determines the min amount of moves to get this value
+                        //Later used to resolve a tie
+                        int movesTillValue = id;
+                        if (m_Value == int.MaxValue || m_Value == int.MinValue) { m_Value = EvaluateBoard(); }
+                        
+                        //If the value is exactly the same as ours, then we didn't even need that extra move
+                        if (m_Value == nextBoardState.Value)
+                        {
+                            movesTillValue = ownMovesTillValue;
+                        }
+
+                        //If the value is different, we did. (Clearing is done as this move is at this point 100% better)
+                        else
+                        {
+                            goodMoves.Clear();
+                        }
+
                         m_Value = nextBoardState.Value;
-                        m_BestMove.moveID = moveid;
-                        m_BestMove.unitID = i;
+                        goodMoves.Add(new Move(i, moveid, nextBoardState.Value, movesTillValue));
+                    }
+                }
+            }
+
+            //Now we have all the good moves, determine our favourite
+            if (goodMoves.Count > 0)
+            {
+                m_BestMove = goodMoves[0];
+                for (int i = 0; i < goodMoves.Count; ++i)
+                {
+                    bool changeBestMove = false;
+                    if (m_CurrentPlayer == PlayerType.White && m_BestMove.value >= goodMoves[i].value) //min
+                    {
+                        changeBestMove = true;
+                    }
+
+                    if (m_CurrentPlayer == PlayerType.Black && m_BestMove.value <= goodMoves[i].value) //max
+                    {
+                        changeBestMove = true;
+                    }
+
+                    if (changeBestMove)
+                    {
+                        //Which is currently just the one that took the least time
+                        if (goodMoves[i].movesTillValue < m_BestMove.movesTillValue)
+                        {
+                            m_BestMove = goodMoves[i];
+                        }
                     }
                 }
             }
@@ -348,7 +401,7 @@ public class BoardState
         else
         {
             //Just calculate the board and that's it!
-            EvaluateBoard();
+            m_Value = EvaluateBoard();
         }
     }
 
