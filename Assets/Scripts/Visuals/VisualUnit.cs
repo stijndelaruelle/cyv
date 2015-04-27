@@ -12,20 +12,43 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     private VisualTile m_ReserveTile = null; //The tile we need to go to when we die
 
     private UnitDefinition m_UnitDefinition = null; //Used for movement ranges etc.
-    private PlayerType m_PlayerType = PlayerType.White;
+    private PlayerColor m_PlayerColor = PlayerColor.White;
+
+    private Transform m_ParentTransform;
+    private bool m_IsDragged = false; //Used to distinguish between click movement & drag movement
+    public bool IsDragged
+    {
+        get { return m_IsDragged; }
+        set { m_IsDragged = value; }
+    }
 
     public void Select(VisualUnit unit)
     {
         if (m_DraggedUnit != null) { m_DraggedUnit.Deselect(); }
-
-        transform.localScale = new Vector3(2.0f, 2.0f, 2.0f);
         m_DraggedUnit = unit;
+
+        if (unit != null)
+        {
+            transform.localScale = new Vector3(2.0f, 2.0f, 2.0f);
+        }
     }
 
     public void Deselect()
     {
         m_DraggedUnit.ShowMovementRange(false);
         transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+
+        if (GameplayManager.Instance.GameState == GameState.Setup ||
+            GameplayManager.Instance.CurrentPlayer == m_PlayerColor)
+        {
+            EnableDragging(true);
+        }
+
+        //We placed the unit out of the valid fields
+        if (transform.parent == m_ParentTransform)
+        {
+            SetTile(m_Tile);
+        }
     }
 
     public void SetTile(VisualTile tile)
@@ -49,12 +72,12 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         return m_Tile;
     }
 
-    public void SetPlayerType(PlayerType playerType)
+    public void SetPlayerColor(PlayerColor playerColor)
     {
-        m_PlayerType = playerType;
+        m_PlayerColor = playerColor;
 
         Color color = Color.white;
-        if (playerType == PlayerType.Black)
+        if (playerColor == PlayerColor.Black)
         {
             color = Color.black;
         }
@@ -62,9 +85,9 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         gameObject.GetComponent<Image>().color = color;
     }
 
-    public PlayerType GetPlayerType()
+    public PlayerColor GetPlayerColor()
     {
-        return m_PlayerType;
+        return m_PlayerColor;
     }
 
     public void SetUnitDefinition(UnitDefinition unitDefinition)
@@ -72,14 +95,26 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         m_UnitDefinition = unitDefinition;
     }
 
+    public void SetParentTransform(Transform transform)
+    {
+        m_ParentTransform = transform;
+    }
+
     private void ShowMovementRange(bool enable)
     {
+        //Very special case, you can always go to your entire half of the board
+        if (GameplayManager.Instance.GameState == GameState.Setup)
+        {
+            GameplayManager.Instance.HighlightSetupZone(enable);
+            return;
+        }
+
         //Show movement range
         if (m_Tile != null && m_UnitDefinition != null)
         {
             for (int i = 0; i < BoardState.DIR_NUM; ++i)
             {
-                m_Tile.HighlightNeighbour(i, enable, m_UnitDefinition.GetMoveCount(i, m_PlayerType), false, m_PlayerType);
+                m_Tile.HighlightNeighbour(i, enable, m_UnitDefinition.GetMoveCount(i, m_PlayerColor), false, m_PlayerColor);
             }
         }
     }
@@ -89,6 +124,11 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         gameObject.GetComponent<CanvasGroup>().blocksRaycasts = state;
     }
 
+    public void Show(bool state)
+    {
+        gameObject.SetActive(state);
+    }
+
     //----------------
     // INTERFACES
     //----------------
@@ -96,21 +136,24 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     //IPointerDownHandler
     public void OnPointerDown(PointerEventData eventData)
     {
-        Select(this);
-        ShowMovementRange(true);
-
-        //Loosen from field so we always render on top!
-        transform.SetParent(transform.parent.transform.parent);
+        //This means the user used the click & click method to place units
+        //Debug.Log("OnPointerDown VisualUnit");
+        OnBeginDrag(eventData);
+        m_IsDragged = false;
     }
 
     //IBeginDragHandler
     public void OnBeginDrag(PointerEventData eventData)
     {
-        Debug.Log("Begin Drag!");
-        //Loosen from field so we always render on top!
-        //transform.SetParent(transform.parent.transform.parent);
+        //Debug.Log("Begin Drag!");
+        Select(this);
 
-        GetComponent<CanvasGroup>().blocksRaycasts = false;
+        //Loosen from field so we always render on top!
+        transform.SetParent(m_ParentTransform);
+        ShowMovementRange(true);
+
+        EnableDragging(false);
+        m_IsDragged = true;
     }
 
     //IDragHandler
@@ -122,11 +165,8 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     //IEndDragHandler
     public void OnEndDrag(PointerEventData eventData)
     {
-        Debug.Log("End Drag!");
+        //Debug.Log("End Drag!");
         Select(null);
-        GetComponent<CanvasGroup>().blocksRaycasts = true;
-
-        transform.localScale = new Vector3(1.0f, 1.0f, 1.0f); //For some reason this resets
     }
 
 }

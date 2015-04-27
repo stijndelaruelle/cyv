@@ -42,16 +42,8 @@ public class VisualBoard : MonoBehaviour
             }
         }
 
-        GenerateHexBoard(6);
+        GenerateHexBoard(BoardState.BOARD_SIZE);
         GenerateUnits();
-
-        //Create empty board state
-        BoardState boardState = new BoardState();
-        boardState.GenerateDefaultState(6);
-
-        m_CurrentBoardState = boardState;
-
-        LoadBoardState(boardState);
     }
 
     private void GenerateHexBoard(int boardSize)
@@ -62,16 +54,8 @@ public class VisualBoard : MonoBehaviour
         float width = 44;
         float height = 38;
 
-        //Reserve tile
-        GameObject obj = null; // GameObject.Instantiate(m_ReserveTilePrefab) as GameObject;
-
-        RectTransform rectTransform = null; //obj.GetComponent<RectTransform>();
-        //rectTransform.SetParent(transform.parent.GetComponent<RectTransform>());
-        //rectTransform.anchoredPosition = new Vector2(0.0f, -175.0f);
-        //rectTransform.sizeDelta = new Vector2(1.0f, 170.0f);
-        //rectTransform.localScale = new Vector2(1.0f, 1.0f);
-
-        //m_VisualTiles.Add(obj.GetComponent<VisualTile>());
+        GameObject obj = null;
+        RectTransform rectTransform = null;
 
         //Calculate board size
         int rowWidth = boardSize;
@@ -248,7 +232,6 @@ public class VisualBoard : MonoBehaviour
         }
 
         gameObject.GetComponent<RectTransform>().anchoredPosition = new Vector3(0.0f, 40.0f);
-        transform.localScale = new Vector3(0.75f, 0.75f, 1.0f);
     }
 
     private void GenerateUnits()
@@ -256,7 +239,6 @@ public class VisualBoard : MonoBehaviour
         if (m_VisualUnits == null) m_VisualUnits = new List<VisualUnit>();
         m_VisualUnits.Clear();
 
-        //MountainUnitDefinition mountainUnitDefinition = new MountainUnitDefinition();
         List<UnitDefinition> unitDefinitions = new List<UnitDefinition>();
         unitDefinitions.Add(new MountainUnitDefinition());
         unitDefinitions.Add(new KingUnitDefinition());
@@ -267,8 +249,7 @@ public class VisualBoard : MonoBehaviour
         unitDefinitions.Add(new HeavyHorseUnitDefinition());
         unitDefinitions.Add(new ElephantUnitDefinition());
         unitDefinitions.Add(new CatapultUnitDefinition());
-
-        int tempTileId = 0;
+        unitDefinitions.Add(new DragonUnitDefinition());
 
         for (int playerID = 0; playerID < 2; ++playerID)
         {
@@ -280,28 +261,34 @@ public class VisualBoard : MonoBehaviour
                 {
                     GameObject obj = GameObject.Instantiate(m_UnitPrefab[(int)unitDefinition.UnitType]) as GameObject;
 
-                    obj.transform.SetParent(m_VisualTiles[tempTileId].transform);
-                    obj.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
-
-                    PlayerType playerType = PlayerType.White;
-                    if (playerID == 1) playerType = PlayerType.Black;
+                    PlayerColor playerColor = PlayerColor.White;
+                    if (playerID == 1) playerColor = PlayerColor.Black;
 
                     VisualUnit visualUnit = obj.GetComponent<VisualUnit>();
-                    visualUnit.SetPlayerType(playerType);
+                    visualUnit.SetPlayerColor(playerColor);
                     visualUnit.SetUnitDefinition(unitDefinition);
-                    visualUnit.SetTile(m_VisualTiles[tempTileId]);
                     visualUnit.SetReserveTile(m_ReserveVisualTiles[playerID]);
+                    visualUnit.SetParentTransform(gameObject.transform);
+                    visualUnit.SetTile(null); //So it's positionned a the reserve tile
 
                     m_VisualUnits.Add(visualUnit);
-
-                    ++tempTileId;
                 }
             }
         }
     }
 
+    public void SetBoardState(BoardState boardState)
+    {
+        //Literally set the referebce, don't copy. Very dangerous, use with caution!!
+        m_CurrentBoardState = boardState;
+        LoadBoardState(m_CurrentBoardState);
+        SaveBoardState();
+    }
+
     public void SaveBoardState()
     {
+        if (m_CurrentBoardState == null) return;
+
         for (int i = 0; i < m_VisualUnits.Count; ++i)
         {
             int tileID = m_VisualUnits[i].GetTile().ID;
@@ -333,18 +320,41 @@ public class VisualBoard : MonoBehaviour
                 m_VisualUnits[i].SetTile(newTile);
             }
         }
-
-        SaveBoardState();
     }
 
-    public void EnableUnitSelection(PlayerType playerType)
+    public void EnableUnitSelection(PlayerColor playerColor, bool state)
     {
         for (int i = 0; i < m_VisualUnits.Count; ++i)
         {
-            bool enable = false;
-            if (m_VisualUnits[i].GetPlayerType() == playerType) { enable = true; }
+            if (m_VisualUnits[i].GetPlayerColor() == playerColor)
+            {
+                m_VisualUnits[i].EnableDragging(state);
+            }
+        }
+    }
 
-            m_VisualUnits[i].EnableDragging(enable);
+    public void ShowUnits(PlayerColor playerColor, bool state)
+    {
+        for (int i = 0; i < m_VisualUnits.Count; ++i)
+        {
+            if (m_VisualUnits[i].GetPlayerColor() == playerColor)
+            {
+                m_VisualUnits[i].Show(state);
+            }
+        }
+    }
+
+    public void HighlightSetupZone(PlayerColor playerColor, bool enable)
+    {
+        //Determine begin & end tile
+        int startTile = 0;
+        if (playerColor == PlayerColor.White) startTile += 51;
+        int endTile = startTile + 40;
+
+        //Loop trough all of them and enable/disable them
+        for (int i = startTile; i < endTile; ++i)
+        {
+            m_VisualTiles[i].Highlight(enable);
         }
     }
 }

@@ -24,7 +24,7 @@ public enum Direction
     Ortohonal6,
 }
 
-public class VisualTile : MonoBehaviour, IDropHandler
+public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
 {
     //This class just visually represents the Unit & the player can interact with it.
     //It does in no way, shape or form hold any game data.
@@ -61,13 +61,18 @@ public class VisualTile : MonoBehaviour, IDropHandler
         return m_Neighbours[dir];
     }
 
-    public void HighlightNeighbour(int dir, bool enable, int movesLeft, bool ignoreUnits, PlayerType playerType, bool recursiveCall = false)
+    public void Highlight(bool enable)
     {
         m_IsHighlighted = enable;
 
         Color color = new Color(1.0f, 0.0f, 0.0f, 0.75f);
         if (!enable) { color = m_OriginalColor; }
         SetColor(color);
+    }
+
+    public void HighlightNeighbour(int dir, bool enable, int movesLeft, bool ignoreUnits, PlayerColor playerColor, bool recursiveCall = false)
+    {
+        Highlight(enable);
 
         //Only do certain checks if this is not the first call
         if (recursiveCall == true)
@@ -75,11 +80,10 @@ public class VisualTile : MonoBehaviour, IDropHandler
             if (!ignoreUnits && transform.childCount != 0)
             {
                 VisualUnit visualUnit = transform.GetChild(0).GetComponent<VisualUnit>();
-                if (visualUnit != null && visualUnit.GetPlayerType() == playerType)
+                if (visualUnit != null && visualUnit.GetPlayerColor() == playerColor)
                 {
                     //This is a unit of the same type, don't go here
-                    m_IsHighlighted = false;
-                    SetColor(m_OriginalColor);
+                    Highlight(false);
                 }
                 return;
             }
@@ -89,7 +93,7 @@ public class VisualTile : MonoBehaviour, IDropHandler
 
         if (m_Neighbours[dir] != null && movesLeft > 0)
         {
-            m_Neighbours[dir].HighlightNeighbour(dir, enable, movesLeft, ignoreUnits, playerType, true);
+            m_Neighbours[dir].HighlightNeighbour(dir, enable, movesLeft, ignoreUnits, playerColor, true);
         }
     }
 
@@ -107,12 +111,36 @@ public class VisualTile : MonoBehaviour, IDropHandler
     // INTERFACES
     //----------------
 
-    //IDropHandler
-    public void OnDrop(PointerEventData eventData)
+    //IPointerDownHandler
+    public void OnPointerDown(PointerEventData eventData)
     {
-        //Can be null when you just click
         if (VisualUnit.m_DraggedUnit != null)
         {
+            //This means the user used the click & click method to place units
+            //Debug.Log("OnPointerDown VisualTile");
+
+            PlaceUnit();
+            VisualUnit.m_DraggedUnit.OnEndDrag(eventData);   
+        }
+    }
+
+    //IDropHandler
+    public void OnDrop(PointerEventData eventData)
+    { 
+        //Can be null when you just click
+        if (VisualUnit.m_DraggedUnit != null && VisualUnit.m_DraggedUnit.IsDragged == true)
+        {
+            //Debug.Log("OnDrop");
+            PlaceUnit();
+        }
+    }
+
+    private void PlaceUnit()
+    {
+        if (VisualUnit.m_DraggedUnit != null)
+        {
+            //Debug.Log("Place Unit!");
+
             //If we're not highlighted, disallow the player to place a unit here
             //And force it back to where it came from!
             if (!m_IsHighlighted)
@@ -135,13 +163,17 @@ public class VisualTile : MonoBehaviour, IDropHandler
                     if (currentUnit != null) { currentUnit.SetTile(null); }
                 }
 
-                //Only count as a "move" if we moved to a different tile
-                if (this != VisualUnit.m_DraggedUnit.GetTile())
+                //Only count as a "move" if we moved to a different tile (and not in setup phase of course)
+                if (GameplayManager.Instance.GameState != GameState.Setup &&
+                    this != VisualUnit.m_DraggedUnit.GetTile())
                 {
-                    GameplayManager.Instance.Move();
+                    VisualUnit.m_DraggedUnit.SetTile(this);
+                    GameplayManager.Instance.SubmitMove();
                 }
-
-                VisualUnit.m_DraggedUnit.SetTile(this);
+                else
+                {
+                    VisualUnit.m_DraggedUnit.SetTile(this);
+                }
             }
         }
     }

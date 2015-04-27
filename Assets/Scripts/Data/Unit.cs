@@ -26,10 +26,10 @@ public class UnitDefinition
     }
 
     protected int[] m_MaxMoveCount = new int[BoardState.DIR_NUM]; //-1 = infinite
-    public int GetMoveCount(int dir, PlayerType playerType)
+    public int GetMoveCount(int dir, PlayerColor playerColor)
     {
         //These are as seen from the white player (upwards, flip around for the other player)
-        if (playerType == PlayerType.Black) { dir += 6; }
+        if (playerColor == PlayerColor.Black) { dir += (int)(BoardState.DIR_NUM * 0.5f); }
 
         if (dir >= BoardState.DIR_NUM) { dir -= BoardState.DIR_NUM; }
         if (dir < 0)                   { dir += BoardState.DIR_NUM; }
@@ -74,7 +74,7 @@ public class MountainUnitDefinition : UnitDefinition
             m_MaxMoveCount[i] = 0;
         }
 
-        m_StartAmount = 0;
+        m_StartAmount = 6;
         m_MaxAmount = 6;
     }
 }
@@ -115,7 +115,7 @@ public class RabbleUnitDefinition : UnitDefinition
             }  
         }
 
-        m_StartAmount = 0;
+        m_StartAmount = 6;
         m_MaxAmount = 6;
     }
 }
@@ -157,7 +157,7 @@ public class SpearUnitDefinition : UnitDefinition
             else { m_MaxMoveCount[i] = 0; }
         }
 
-        m_StartAmount = 0;
+        m_StartAmount = 2;
         m_MaxAmount = 2;
     }
 }
@@ -178,7 +178,7 @@ public class CrossbowUnitDefinition : UnitDefinition
             else { m_MaxMoveCount[i] = 0; }
 
         }
-        m_StartAmount = 0;
+        m_StartAmount = 2;
         m_MaxAmount = 2;
     }
 }
@@ -247,6 +247,23 @@ public class CatapultUnitDefinition : UnitDefinition
     }
 }
 
+public class DragonUnitDefinition : UnitDefinition
+{
+    public DragonUnitDefinition()
+    {
+        m_UnitType = UnitType.Dragon;
+        m_Value = 9;
+
+        for (int i = 0; i < m_MaxMoveCount.Length; ++i)
+        {
+            m_MaxMoveCount[i] = 9999;
+        }
+
+        m_StartAmount = 1;
+        m_MaxAmount = 1;
+    }
+}
+
 public class Unit
 {
     //---------------
@@ -258,8 +275,8 @@ public class Unit
         get { return m_UnitDefinition; }
     }
 
-    private PlayerType m_Owner; //The player that owns us
-    public PlayerType Owner
+    private PlayerColor m_Owner; //The player that owns us
+    public PlayerColor Owner
     {
         get { return m_Owner; }
     }
@@ -274,7 +291,7 @@ public class Unit
     //---------------
     // Functions
     //---------------
-    public Unit(BoardState boardState, UnitDefinition unitDef, PlayerType owner, Tile tile)
+    public Unit(BoardState boardState, UnitDefinition unitDef, PlayerColor owner, Tile tile)
     {
         m_BoardState = boardState;
         m_UnitDefinition = unitDef;

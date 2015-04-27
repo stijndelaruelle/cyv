@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public enum PlayerType
+public enum PlayerColor
 {
     White, //Min
     Black  //Max
@@ -27,6 +27,7 @@ public class BoardState
     }
 
     public static int DIR_NUM = 12;
+    public static int BOARD_SIZE = 6;
 
     //List of units (0-x = white, x-(x+x) = black)
     private List<Unit> m_Units;
@@ -42,7 +43,11 @@ public class BoardState
         get { return m_Tiles; }
     }
 
-    private PlayerType m_CurrentPlayer; //Min or Max (only used for AI)
+    private PlayerColor m_CurrentPlayer; //Min or Max (only used for AI)
+    public PlayerColor CurrentPlayer
+    {
+        get { return m_CurrentPlayer; }
+    }
 
     //Alpha beta pruning
     private int m_Value = 0;
@@ -226,15 +231,14 @@ public class BoardState
         unitDefinitions.Add(new HeavyHorseUnitDefinition());
         unitDefinitions.Add(new ElephantUnitDefinition());
         unitDefinitions.Add(new CatapultUnitDefinition());
+        unitDefinitions.Add(new DragonUnitDefinition());
 
-        PlayerType owner = PlayerType.White;
+        PlayerColor owner = PlayerColor.White;
         Unit newUnit = null;
-
-        int tempTileId = 0;
 
         for (int playerID = 0; playerID < 2; ++playerID)
         {
-            if (playerID == 1) owner = PlayerType.Black;
+            if (playerID == 1) owner = PlayerColor.Black;
 
             //Go trough all the unit types
             for (int unitType = 0; unitType < unitDefinitions.Count; ++unitType)
@@ -244,9 +248,9 @@ public class BoardState
                 //Add the right amount of units
                 for (int unitID = 0; unitID < unitDefinition.StartAmount; ++unitID)
                 {
-                    newUnit = new Unit(this, unitDefinition, owner, m_Tiles[tempTileId]);
+                    newUnit = new Unit(this, unitDefinition, owner, null);
                     m_Units.Add(newUnit);
-                    ++tempTileId;
+
                 }
             }
         }
@@ -290,13 +294,13 @@ public class BoardState
                 //Points are bigger than losing your own king, as that simply doesn't matter anymore
                 else if (unit.UnitDefinition.UnitType == UnitType.King && unit.GetTile() == null)
                 {
-                    value += 9999999;
+                    value += 99999999;
                 }
             }
         }
 
         //If we're min, invert this value
-        if (m_CurrentPlayer == PlayerType.White)
+        if (m_CurrentPlayer == PlayerColor.White)
         {
             value *= -1;
         }
@@ -324,7 +328,7 @@ public class BoardState
         {
             //Reset the value to an insane value (the opposite of what we prefer)
             m_Value = int.MaxValue;
-            if (m_CurrentPlayer == PlayerType.Black) { m_Value *= -1; }
+            if (m_CurrentPlayer == PlayerColor.Black) { m_Value *= -1; }
 
             List<Move> goodMoves = new List<Move>();
             int ownMovesTillValue = id;
@@ -351,17 +355,23 @@ public class BoardState
                     nextBoardState.CopyBoard(this);
                     nextBoardState.Units[i].ProcessMove(moveid);
 
-                    nextBoardState.SwapCurrentPlayer();
+                    //if (id == 1)
+                    //{
+                    //    Debug.Log("");
+                    //}
+
+                    //Only
+                    if (id < boardStates.Count) { nextBoardState.SwapCurrentPlayer(); }
                     nextBoardState.ProcessAllMoves(boardStates, id);
 
                     //Get the value and make and compare it
                     bool addMove = false;
-                    if (m_CurrentPlayer == PlayerType.White && m_Value >= nextBoardState.Value) //min
+                    if (m_CurrentPlayer == PlayerColor.White && m_Value >= nextBoardState.Value) //min
                     {
                         addMove = true;
                     }
 
-                    if (m_CurrentPlayer == PlayerType.Black && m_Value <= nextBoardState.Value) //max
+                    if (m_CurrentPlayer == PlayerColor.Black && m_Value <= nextBoardState.Value) //max
                     {
                         addMove = true;
                     }
@@ -372,11 +382,6 @@ public class BoardState
                         //Later used to resolve a tie
                         int movesTillValue = id;
                         if (m_Value == int.MaxValue || m_Value == int.MinValue) { m_Value = EvaluateBoard(); }
-
-                        if (id == 1)
-                        {
-                            Debug.Log("");
-                        }
 
                         //If the value is exactly the same as ours, then we didn't even need that extra move
                         if (m_Value == nextBoardState.Value)
@@ -396,10 +401,10 @@ public class BoardState
                 }
             }
 
-            if (id == 1)
-            {
-                Debug.Log("");
-            }
+            //if (id == 1)
+            //{
+            //    Debug.Log("");
+            //}
 
             //Now we have all the good moves, determine our favourite
             if (goodMoves.Count > 0)
@@ -408,12 +413,12 @@ public class BoardState
                 for (int i = 0; i < goodMoves.Count; ++i)
                 {
                     bool changeBestMove = false;
-                    if (m_CurrentPlayer == PlayerType.White && m_BestMove.value >= goodMoves[i].value) //min
+                    if (m_CurrentPlayer == PlayerColor.White && m_BestMove.value >= goodMoves[i].value) //min
                     {
                         changeBestMove = true;
                     }
 
-                    if (m_CurrentPlayer == PlayerType.Black && m_BestMove.value <= goodMoves[i].value) //max
+                    if (m_CurrentPlayer == PlayerColor.Black && m_BestMove.value <= goodMoves[i].value) //max
                     {
                         changeBestMove = true;
                     }
@@ -457,14 +462,30 @@ public class BoardState
         return m_Units[unitID];
     }
 
-    public void SetCurrentPlayer(PlayerType playerType)
+    public void SetCurrentPlayer(PlayerColor playerColor)
     {
-        m_CurrentPlayer = playerType;
+        m_CurrentPlayer = playerColor;
     }
 
     public void SwapCurrentPlayer()
     {
-        if (m_CurrentPlayer == PlayerType.White) { m_CurrentPlayer = PlayerType.Black; }
-        else                                     { m_CurrentPlayer = PlayerType.White; }
+        if (m_CurrentPlayer == PlayerColor.White) { m_CurrentPlayer = PlayerColor.Black; }
+        else                                      { m_CurrentPlayer = PlayerColor.White; }
+    }
+
+    public bool IsKingDead(PlayerColor playerColor)
+    {
+        foreach (Unit unit in m_Units)
+        {
+            if (unit.Owner == playerColor && unit.UnitDefinition.UnitType == UnitType.King)
+            {
+                if (unit.GetTile() == null)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }
