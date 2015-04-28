@@ -97,7 +97,7 @@ public class GameplayManager : MonoBehaviour
     public void Start()
     {
         //Not is Awake as they should not depend on eachother there yet
-        NewGame(PlayerType.Human, PlayerType.AI, GameMode.PassAndPlay);
+        NewGame(PlayerType.Human, PlayerType.Human, GameMode.TabletPlay);
     }
 
     public void NewGame(PlayerType playerType1, PlayerType playerType2, GameMode gameMode)

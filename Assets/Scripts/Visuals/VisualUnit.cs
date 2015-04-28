@@ -100,6 +100,11 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         m_UnitDefinition = unitDefinition;
     }
 
+    public UnitDefinition GetUnitDefinition()
+    {
+        return m_UnitDefinition;
+    }
+
     public void SetParentTransform(Transform transform)
     {
         m_ParentTransform = transform;
@@ -119,7 +124,7 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         {
             for (int i = 0; i < BoardState.DIR_NUM; ++i)
             {
-                m_Tile.HighlightNeighbour(i, enable, m_UnitDefinition.GetMoveCount(i, m_PlayerColor), false, m_PlayerColor);
+                m_Tile.HighlightNeighbour(i, enable, m_UnitDefinition.GetMoveCount(i, m_PlayerColor), m_UnitDefinition.CanJump, m_UnitDefinition.MustJump, m_PlayerColor);
             }
         }
     }

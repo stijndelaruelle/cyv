@@ -354,6 +354,16 @@ public class VisualBoard : MonoBehaviour
         //Loop trough all of them and enable/disable them
         for (int i = startTile; i < endTile; ++i)
         {
+            //Disallow chaining mountains
+            if (VisualUnit.m_DraggedUnit != null && 
+                VisualUnit.m_DraggedUnit.GetUnitDefinition().UnitType == UnitType.Mountain)
+            {
+                if (m_VisualTiles[i].HasNeightbourWithUnit(UnitType.Mountain, true, false))
+                {
+                    continue;
+                }
+            }
+
             m_VisualTiles[i].Highlight(enable);
         }
     }

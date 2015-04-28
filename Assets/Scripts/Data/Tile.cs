@@ -53,34 +53,55 @@ public class Tile
         return m_Neighbours[id];
     }
 
-    public void CountNeighbours(int id, ref List<Tile> movealbeTiles, int movesLeft, bool ignoreUnits, bool ignoreMountains, PlayerColor playerColor, bool recursiveCall = false)
+    public void CountNeighbours(int id, ref List<Tile> movealbeTiles, int movesLeft, bool canJump, bool mustJump, PlayerColor playerColor, bool recursiveCall = false)
     {
         if (movesLeft <= 0) return;
-        
+        bool add = true;
+
         //Only do certain checks if this is not the first call
         if (recursiveCall == true)
         {
-            if (!ignoreMountains && m_Unit != null && m_Unit.UnitDefinition.UnitType == UnitType.Mountain) return;
+            movesLeft -= 1;
 
-            //Dissallow units
-            if (!ignoreUnits && m_Unit != null)
+            if (m_Unit != null)
             {
                 //Don't even include this tile if the unit is from the same player
-                if (m_Unit.Owner != playerColor)
+                if (m_Unit.Owner == playerColor)
                 {
-                    movesLeft -= 1;
-                    movealbeTiles.Add(this);
+                    add = false;
                 }
-                return;
+
+                //This unit is a mountain, don't go here
+                if (m_Unit.UnitDefinition.UnitType == UnitType.Mountain)
+                {
+                    add = false;
+                }
+
+                //Jump!
+                if (canJump)
+                {
+                    movesLeft = 1; //We hop over that unit
+                    canJump = false; //No more than 1 jump
+                }
+                else
+                {
+                    if (add) movealbeTiles.Add(this);
+                    return;
+                }
             }
 
-            movesLeft -= 1;
-            movealbeTiles.Add(this);
+            //If we MUST jump, and we haven't jumped yet then this tile is not valid.
+            if (mustJump && canJump)
+            {
+                add = false;
+            }
+
+            if (add) movealbeTiles.Add(this);
         }
 
         if (m_Neighbours[id] != null && movesLeft > 0)
         {
-            m_Neighbours[id].CountNeighbours(id, ref movealbeTiles, movesLeft, ignoreUnits, ignoreMountains, playerColor, true);
+            m_Neighbours[id].CountNeighbours(id, ref movealbeTiles, movesLeft, canJump, mustJump, playerColor, true);
         }
     }
 }

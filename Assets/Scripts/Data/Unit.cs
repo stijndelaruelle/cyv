@@ -55,10 +55,16 @@ public class UnitDefinition
         get { return m_MaxAmount; }
     }
 
-    protected bool m_IgnoreUnits = false;
-    public bool IgnoreUnits
+    protected bool m_CanJump = false;
+    public bool CanJump
     {
-        get { return m_IgnoreUnits; }
+        get { return m_CanJump; }
+    }
+
+    protected bool m_MustJump = false;
+    public bool MustJump
+    {
+        get { return m_MustJump; }
     }
 }
 
@@ -74,6 +80,8 @@ public class MountainUnitDefinition : UnitDefinition
             m_MaxMoveCount[i] = 0;
         }
 
+        m_CanJump = false;
+        m_MustJump = false;
         m_StartAmount = 6;
         m_MaxAmount = 6;
     }
@@ -91,6 +99,8 @@ public class KingUnitDefinition : UnitDefinition
             m_MaxMoveCount[i] = 1;
         }
 
+        m_CanJump = false;
+        m_MustJump = false;
         m_StartAmount = 1;
         m_MaxAmount = 1;
     }
@@ -115,6 +125,8 @@ public class RabbleUnitDefinition : UnitDefinition
             }  
         }
 
+        m_CanJump = false;
+        m_MustJump = false;
         m_StartAmount = 6;
         m_MaxAmount = 6;
     }
@@ -136,6 +148,8 @@ public class LightHorseUnitDefinition : UnitDefinition
             else { m_MaxMoveCount[i] = 2; }
         }
 
+        m_CanJump = false;
+        m_MustJump = false;
         m_StartAmount = 2;
         m_MaxAmount = 2;
     }
@@ -157,6 +171,8 @@ public class SpearUnitDefinition : UnitDefinition
             else { m_MaxMoveCount[i] = 0; }
         }
 
+        m_CanJump = false;
+        m_MustJump = false;
         m_StartAmount = 2;
         m_MaxAmount = 2;
     }
@@ -175,9 +191,12 @@ public class CrossbowUnitDefinition : UnitDefinition
             if (i % 2 == 0) { m_MaxMoveCount[i] = 1; }
 
             //Orthogonal
-            else { m_MaxMoveCount[i] = 0; }
+            else { m_MaxMoveCount[i] = 1; }
 
         }
+
+        m_CanJump = true;
+        m_MustJump = true;
         m_StartAmount = 2;
         m_MaxAmount = 2;
     }
@@ -199,7 +218,9 @@ public class HeavyHorseUnitDefinition : UnitDefinition
             else { m_MaxMoveCount[i] = 9999; }
         }
 
-        m_StartAmount = 0;
+        m_CanJump = false;
+        m_MustJump = false;
+        m_StartAmount = 1;
         m_MaxAmount = 2;
     }
 }
@@ -220,7 +241,9 @@ public class ElephantUnitDefinition : UnitDefinition
             else { m_MaxMoveCount[i] = 0; }
         }
 
-        m_StartAmount = 0;
+        m_CanJump = false;
+        m_MustJump = false;
+        m_StartAmount = 1;
         m_MaxAmount = 2;
     }
 }
@@ -238,11 +261,13 @@ public class CatapultUnitDefinition : UnitDefinition
             if (i % 2 == 0) { m_MaxMoveCount[i] = 9999; }
 
             //Orthogonal
-            else { m_MaxMoveCount[i] = 0; }
+            else { m_MaxMoveCount[i] = 9999; }
 
         }
 
-        m_StartAmount = 0;
+        m_CanJump = true;
+        m_MustJump = true;
+        m_StartAmount = 1;
         m_MaxAmount = 2;
     }
 }
@@ -259,6 +284,8 @@ public class DragonUnitDefinition : UnitDefinition
             m_MaxMoveCount[i] = 9999;
         }
 
+        m_CanJump = true;
+        m_MustJump = false;
         m_StartAmount = 1;
         m_MaxAmount = 1;
     }
@@ -365,7 +392,7 @@ public class Unit
             int movesLeft = UnitDefinition.GetMoveCount(i, m_Owner);        
             if (movesLeft > 0)
             {
-                m_Tile.CountNeighbours(i, ref m_PossibleMoves[i], movesLeft, UnitDefinition.IgnoreUnits, false, m_Owner);
+                m_Tile.CountNeighbours(i, ref m_PossibleMoves[i], movesLeft, UnitDefinition.CanJump, UnitDefinition.MustJump, m_Owner);
                 totalMoves += m_PossibleMoves[i].Count;
             }
         }

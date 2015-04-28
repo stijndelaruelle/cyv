@@ -61,6 +61,30 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
         return m_Neighbours[dir];
     }
 
+    public bool HasNeightbourWithUnit(UnitType unitType, bool orthogonal, bool diagonal)
+    {
+        for (int i = 0; i < m_Neighbours.Length; ++i)
+        {
+            if (m_Neighbours[i] == null)
+                continue;
+
+            //Diagonal
+            if (i % 2 == 0 && !diagonal)
+                continue;
+
+            //Orthogonal
+            if (i % 2 != 0 && !orthogonal)
+                continue;
+
+            VisualUnit visualUnit = m_Neighbours[i].GetVisualUnit();
+            if (visualUnit != null &&
+                visualUnit.GetUnitDefinition().UnitType == unitType)
+                return true;
+        }
+
+        return false;
+    }
+
     public void Highlight(bool enable)
     {
         m_IsHighlighted = enable;
@@ -70,30 +94,53 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
         SetColor(color);
     }
 
-    public void HighlightNeighbour(int dir, bool enable, int movesLeft, bool ignoreUnits, PlayerColor playerColor, bool recursiveCall = false)
+    public void HighlightNeighbour(int dir, bool enable, int movesLeft, bool canJump, bool mustJump, PlayerColor playerColor, bool recursiveCall = false)
     {
         Highlight(enable);
 
         //Only do certain checks if this is not the first call
         if (recursiveCall == true)
         {
-            if (!ignoreUnits && transform.childCount != 0)
+            movesLeft -= 1;
+
+            if (transform.childCount != 0)
             {
-                VisualUnit visualUnit = transform.GetChild(0).GetComponent<VisualUnit>();
+                VisualUnit visualUnit = GetVisualUnit();
+
+                //This is a unit of the same type, don't go here
                 if (visualUnit != null && visualUnit.GetPlayerColor() == playerColor)
-                {
-                    //This is a unit of the same type, don't go here
+                { 
                     Highlight(false);
                 }
-                return;
+
+                //This unit is a mountain, don't go here
+                if (visualUnit != null && visualUnit.GetUnitDefinition().UnitType == UnitType.Mountain)
+                {
+                    Highlight(false);
+                }
+
+                //Jump!
+                if (canJump)
+                {
+                    movesLeft = 1; //We hop over that unit
+                    canJump = false; //No more than 1 jump
+                }
+                else
+                {
+                    return;
+                }
             }
 
-            movesLeft -= 1;
+            //If we MUST jump, and we haven't jumped yet then this tile is not valid.
+            if (mustJump && canJump)
+            {
+                Highlight(false);
+            }
         }
 
         if (m_Neighbours[dir] != null && movesLeft > 0)
         {
-            m_Neighbours[dir].HighlightNeighbour(dir, enable, movesLeft, ignoreUnits, playerColor, true);
+            m_Neighbours[dir].HighlightNeighbour(dir, enable, movesLeft, canJump, mustJump, playerColor, true);
         }
     }
 
@@ -176,5 +223,13 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
                 }
             }
         }
+    }
+
+    private VisualUnit GetVisualUnit()
+    {
+        if (transform.childCount > 0)
+            return transform.GetChild(0).GetComponent<VisualUnit>();
+        else
+            return null;
     }
 }
