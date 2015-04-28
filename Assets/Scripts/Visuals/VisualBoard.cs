@@ -357,4 +357,42 @@ public class VisualBoard : MonoBehaviour
             m_VisualTiles[i].Highlight(enable);
         }
     }
+
+    public void FlipBoard(bool enable)
+    {
+        //Flip the board
+        float angle = 0.0f;
+        if (enable) angle = 180.0f;
+
+        gameObject.transform.localRotation = Quaternion.Euler(new Vector3(0.0f, 0.0f, angle));
+
+        //Rotate the reserve tiles back
+        foreach (VisualTile tile in m_ReserveVisualTiles)
+        {
+            tile.transform.localRotation = Quaternion.Euler(new Vector3(0.0f, 0.0f, angle));
+        }
+
+        //Flip all the units again (otherwise they are upside down)
+        FlipUnits(PlayerColor.White, enable, true);
+        FlipUnits(PlayerColor.Black, enable, true);
+    }
+
+    public void FlipUnits(PlayerColor playerColor, bool enable, bool onlyOnBoard = false)
+    {
+        for (int i = 0; i < m_VisualUnits.Count; ++i)
+        {
+            if (m_VisualUnits[i].GetPlayerColor() == playerColor)
+            {
+                //If our tile is also our reserve tile we're not on the board
+                if (onlyOnBoard && m_VisualUnits[i].GetTile() == m_VisualUnits[i].GetReserveTile())
+                {
+                    m_VisualUnits[i].Flip(false);
+                }
+                else
+                {
+                    m_VisualUnits[i].Flip(enable);
+                }
+            }
+        }
+    }
 }

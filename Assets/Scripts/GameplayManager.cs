@@ -19,8 +19,7 @@ public enum PlayerType
 
 public enum GameMode
 {
-    Regular,     //Nothing happens
-    PassAndPlay, //Board flips turns after every move
+    PassAndPlay, //Board flips turns after every move (unless AI is involved)
     TabletPlay   //Black units are flipped at the beginning of the game
 }
 
@@ -63,6 +62,8 @@ public class GameplayManager : MonoBehaviour
         get { return m_GameState; }
     }
 
+    private GameMode m_GameMode = GameMode.PassAndPlay;
+
     //Singleton
     private static GameplayManager m_Instance;
     public static GameplayManager Instance
@@ -96,7 +97,7 @@ public class GameplayManager : MonoBehaviour
     public void Start()
     {
         //Not is Awake as they should not depend on eachother there yet
-        NewGame(PlayerType.Human, PlayerType.Human, GameMode.Regular);
+        NewGame(PlayerType.Human, PlayerType.AI, GameMode.PassAndPlay);
     }
 
     public void NewGame(PlayerType playerType1, PlayerType playerType2, GameMode gameMode)
@@ -118,6 +119,10 @@ public class GameplayManager : MonoBehaviour
         boardState.GenerateDefaultState(BoardState.BOARD_SIZE);
 
         m_VisualBoard.SetBoardState(boardState);
+        m_VisualBoard.FlipBoard(false);
+
+        //Set the gamemode (pass & play or tablet)
+        SetGameMode(gameMode);
 
         SaveBoardState();
     }
@@ -232,14 +237,29 @@ public class GameplayManager : MonoBehaviour
             m_VisualBoard.ShowUnits(OtherPlayer(m_CurrentPlayer), false);
         }
 
+        //Flip the board if required
+        if (m_GameMode == GameMode.PassAndPlay && !IsAIPlaying())
+        {
+            bool flip = (CurrentPlayer == PlayerColor.Black);
+            m_VisualBoard.FlipBoard(flip);
+        }
+
         Debug.Log(m_CurrentPlayer.ToString() + "'s turn");
     }
 
     public void AIMove()
     {
+        StartCoroutine(AIMoveRoutine());
+    }
+
+    private IEnumerator AIMoveRoutine()
+    {
+        //Quickly placed into a routine, to mask hickups (& make AI vs AI look sensible)
+        yield return new WaitForSeconds(0.2f);
+
         //Get the current boardstate
         if (m_VisualBoard == null)
-            return;
+            yield return null;
 
         BoardState currentBoardState = m_VisualBoard.CurrentBoardState;
         currentBoardState.SetCurrentPlayer(m_CurrentPlayer);
@@ -258,6 +278,8 @@ public class GameplayManager : MonoBehaviour
         //Load visually & done!
         m_VisualBoard.LoadBoardState(currentBoardState);
         SubmitMove();
+
+        yield return null;
     }
 
     public void SetGameState(GameState gameState)
@@ -304,29 +326,22 @@ public class GameplayManager : MonoBehaviour
                     //Set the text
                     string text = "";
 
-                    int numAI = 0;
-                    for (int i = 0; i < m_PlayerTypes.Length; ++i)
+                    //If 1 player was a computer, show win/lose
+                    PlayerColor winner = PlayerColor.White;
+
+                    if (m_VisualBoard.CurrentBoardState.IsKingDead(PlayerColor.White)) { winner = PlayerColor.Black; }
+                    if (m_VisualBoard.CurrentBoardState.IsKingDead(PlayerColor.Black)) { winner = PlayerColor.White; }
+
+                    if (IsAIPlaying())
                     {
-                        if (m_PlayerTypes[i] == PlayerType.AI) { numAI += 1;  }
+                        if (m_PlayerTypes[(int)winner] == PlayerType.Human) { text = "You win!"; }
+                        else                                                { text = "You lose!"; }
                     }
 
                     //If both players where humans or AI's just show the color
-                    if (numAI == 0 || numAI == 2)
-                    {
-                        text = m_CurrentPlayer.ToString() + " wins!";
-                    }
-
-                    //If 1 player was a computer, show win/lose
                     else
                     {
-                        if (m_PlayerTypes[(int)m_CurrentPlayer] == PlayerType.Human)
-                        {
-                            text = "You win!";
-                        }
-                        else
-                        {
-                            text = "You lose!";
-                        }
+                        text = m_CurrentPlayer.ToString() + " wins!";     
                     }
 
                     m_EndGameText.text = text;
@@ -341,10 +356,32 @@ public class GameplayManager : MonoBehaviour
         }
     }
 
+    public void SetGameMode(GameMode gameMode)
+    {
+        m_GameMode = gameMode;
+
+        //Pass & play is handled at every swap turns
+        bool flip = (m_GameMode == GameMode.TabletPlay);
+        m_VisualBoard.FlipUnits(PlayerColor.Black, flip);
+    }
+
     public PlayerColor OtherPlayer(PlayerColor player)
     {
         if (player == PlayerColor.White) { return PlayerColor.Black; }
         return PlayerColor.White;
+    }
+
+    public bool IsAIPlaying()
+    {
+        for (int i = 0; i < m_PlayerTypes.Length; ++i)
+        {
+            if (m_PlayerTypes[i] == PlayerType.AI)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 }

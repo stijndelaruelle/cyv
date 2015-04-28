@@ -72,6 +72,11 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         return m_Tile;
     }
 
+    public VisualTile GetReserveTile()
+    {
+        return m_ReserveTile;
+    }
+
     public void SetPlayerColor(PlayerColor playerColor)
     {
         m_PlayerColor = playerColor;
@@ -129,6 +134,14 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         gameObject.SetActive(state);
     }
 
+    public void Flip(bool state)
+    {
+        float angle = 0.0f;
+        if (state) angle = 180.0f;
+
+        gameObject.transform.localRotation = Quaternion.Euler(new Vector3(0.0f, 0.0f, angle));
+    }
+
     //----------------
     // INTERFACES
     //----------------
@@ -140,6 +153,9 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         //Debug.Log("OnPointerDown VisualUnit");
         OnBeginDrag(eventData);
         m_IsDragged = false;
+
+        //Play a sound effect
+        AudioManager.Instance.PlaySound(AudioManager.SoundType.GrabUnit);
     }
 
     //IBeginDragHandler
@@ -167,6 +183,9 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     {
         //Debug.Log("End Drag!");
         Select(null);
+
+        //Play a sound effect
+        AudioManager.Instance.PlaySound(AudioManager.SoundType.DropUnit);
     }
 
 }
