@@ -4,6 +4,13 @@ using System.Collections.Generic;
 
 public class AudioManager : MonoBehaviour
 {
+    public enum AudioType
+    {
+        Music,
+        Ambience,
+        SFX
+    }
+
     public enum SoundType
     {
         GrabUnit,
@@ -27,12 +34,6 @@ public class AudioManager : MonoBehaviour
     [SerializeField]
     private AudioSource m_SFXPlayer = null;
 
-    [SerializeField]
-    private bool m_MuteMusic = false;
-
-    [SerializeField]
-    private bool m_MuteSFX = false;
-
     //Singleton
     private static AudioManager m_Instance;
     public static AudioManager Instance
@@ -50,10 +51,8 @@ public class AudioManager : MonoBehaviour
 
     void Start()
     {
-        MuteMusic(m_MuteMusic);
-        MuteSFX(m_MuteSFX);
-
-        if (m_MuteMusic) return;
+        //Load the volumes from the PlayerPrefs
+        LoadVolumes();
 
         //Start Playing the first song
         if (m_Songs.Length > 0)
@@ -69,7 +68,7 @@ public class AudioManager : MonoBehaviour
 	// Update is called once per frame
     private void Update()
     {
-	    if (!m_MusicPlayer.isPlaying && !m_MuteMusic)
+	    if (!m_MusicPlayer.isPlaying)
         {
             PlayNextSong();
         }
@@ -77,8 +76,6 @@ public class AudioManager : MonoBehaviour
 
     private void PlayNextSong()
     {
-        if (m_MuteMusic) return;
-
         if (m_Songs.Length > 0)
         {
             ++m_CurrentSongID;
@@ -90,8 +87,6 @@ public class AudioManager : MonoBehaviour
 
     private void PlaySong(int id)
     {
-        if (m_MuteMusic) return;
-
         m_MusicPlayer.loop = false;
         m_MusicPlayer.clip = m_Songs[id];
         m_MusicPlayer.Play();
@@ -99,56 +94,127 @@ public class AudioManager : MonoBehaviour
 
     public void PlaySound(SoundType sound)
     {
-        if (m_MuteSFX) return;
-
         int soundID = (int)sound;
         if (soundID >= m_SFX.Length) return;
 
         m_SFXPlayer.PlayOneShot(m_SFX[soundID]);
     }
 
-    public void ToggleMusic()
+    //Setters
+    public void LoadVolumes()
     {
-        MuteMusic(!m_MuteMusic);
+        if (PlayerPrefs.HasKey("MusicVolume"))
+        {
+            SetMusicVolume(PlayerPrefs.GetFloat("MusicVolume"));
+        }
+
+        if (PlayerPrefs.HasKey("AmbienceVolume"))
+        {
+            SetAmbienceVolume(PlayerPrefs.GetFloat("AmbienceVolume"));
+        }
+
+        if (PlayerPrefs.HasKey("SFXVolume"))
+        {
+            SetSFXVolume(PlayerPrefs.GetFloat("SFXVolume"));
+        }
     }
 
-    public void ToggleSFX()
+    public void SetVolume(AudioType audioType, float volume)
     {
-        MuteSFX(!m_MuteSFX);
+        switch (audioType)
+        {
+            case AudioType.Music:
+                SetMusicVolume(volume);
+                break;
+
+            case AudioType.Ambience:
+                SetAmbienceVolume(volume);
+                break;
+
+            case AudioType.SFX:
+                SetSFXVolume(volume);
+                break;
+        }
     }
 
-    public void MuteMusic(bool state)
+    public void SetMusicVolume(float volume)
     {
-        m_MuteMusic = state;
+        if (m_MusicPlayer == null)
+            return;
 
-        if (state)
-        {
-            m_MusicPlayer.Stop();
-            m_AmbiencePlayer.Stop();
-        }
-        else
-        {
-            m_MusicPlayer.Play();
-            m_AmbiencePlayer.Play();
-        }
+        m_MusicPlayer.volume = volume;
 
-        m_MusicPlayer.mute = state;
-        m_AmbiencePlayer.mute = state;
+        //Save in playerprefs
+        PlayerPrefs.SetFloat("MusicVolume", volume);
     }
 
-    public void MuteSFX(bool state)
+    public void SetAmbienceVolume(float volume)
     {
-        m_MuteSFX = state;
+        if (m_AmbiencePlayer == null)
+            return;
 
-        if (state)
+        m_AmbiencePlayer.volume = volume;
+
+        //Save in playerprefs
+        PlayerPrefs.SetFloat("AmbienceVolume", volume);
+    }
+
+    public void SetSFXVolume(float volume)
+    {
+        if (m_SFXPlayer == null)
+            return;
+
+        m_SFXPlayer.volume = volume;
+
+        //Save in playerprefs
+        PlayerPrefs.SetFloat("SFXVolume", volume);
+    }
+
+    //Getters
+    public float GetVolume(AudioType audioType)
+    {
+        switch (audioType)
         {
-            m_SFXPlayer.Stop();
-        }
-        else
-        {
-            m_SFXPlayer.Play();
+            case AudioType.Music:
+                return GetMusicVolume();
+                //break;
+
+            case AudioType.Ambience:
+                return GetAmbienceVolume();
+                //break;
+
+            case AudioType.SFX:
+                return GetSFXVolume();
+                //break;
+
+            default:
+                break;
         }
 
-        m_SFXPlayer.mute = state;
+        return 0.0f;
+    }
+
+    public float GetMusicVolume()
+    {
+        if (m_MusicPlayer == null)
+            return 0.0f;
+
+        return m_MusicPlayer.volume;
+    }
+
+    public float GetAmbienceVolume()
+    {
+        if (m_AmbiencePlayer == null)
+            return 0.0f;
+
+        return m_AmbiencePlayer.volume;
+    }
+
+    public float GetSFXVolume()
+    {
+        if (m_SFXPlayer == null)
+            return 0.0f;
+
+        return m_SFXPlayer.volume;
     }
 }

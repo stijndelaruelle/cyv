@@ -38,9 +38,6 @@ public class GameplayManager : MonoBehaviour
     private GameObject m_ConfirmFormationButton = null; //Only used to confirm a formation, we use the refernce to enable/disable that button
 
     [SerializeField]
-    private GameObject m_EndGamePanel = null; //The panel used when the game ends
-
-    [SerializeField]
     private Text m_EndGameText = null; //The text displayed when the game ends
 
     //Stores the playertypes (human or AI)
@@ -119,7 +116,18 @@ public class GameplayManager : MonoBehaviour
         boardState.GenerateDefaultState(BoardState.BOARD_SIZE);
 
         m_VisualBoard.SetBoardState(boardState);
-        m_VisualBoard.FlipBoard(false);
+
+        //Flip the board only if the player is black & we're facing a white AI
+        if (m_PlayerTypes[0] == PlayerType.AI && m_PlayerTypes[1] == PlayerType.Human)
+        {
+            m_VisualBoard.FlipBoard(true);
+        }
+
+        //Otherwise simply don't
+        else
+        {
+            m_VisualBoard.FlipBoard(false);
+        }
 
         //Set the gamemode (pass & play or tablet)
         SetGameMode(gameMode);
@@ -159,6 +167,7 @@ public class GameplayManager : MonoBehaviour
     public void LoadBoardState()
     {
         m_VisualBoard.LoadBoardState(m_BoardStates[m_CurrentBoardStateID]);
+        CheckGameStates();
     }
 
     public void SubmitMove()
@@ -167,10 +176,10 @@ public class GameplayManager : MonoBehaviour
 
         CheckGameStates();
 
+        SwapTurns();
+
         if (m_GameState == GameState.EndGame)
             return;
-
-        SwapTurns();
 
         //If the new player is an AI, let him think!
         if (m_PlayerTypes[(int)m_CurrentPlayer] == PlayerType.AI &&
@@ -191,13 +200,13 @@ public class GameplayManager : MonoBehaviour
         //If a king is dead, the game is done!
         if (m_GameState == GameState.Game)
         {
-            if (m_VisualBoard.CurrentBoardState.IsKingDead(PlayerColor.White))
+            if (m_BoardStates[m_CurrentBoardStateID].IsKingDead(PlayerColor.White))
             {
                 Debug.Log("Black won!");
                 SetGameState(GameState.EndGame);
             }
 
-            if (m_VisualBoard.CurrentBoardState.IsKingDead(PlayerColor.Black))
+            if (m_BoardStates[m_CurrentBoardStateID].IsKingDead(PlayerColor.Black))
             {
                 Debug.Log("White won!");
                 SetGameState(GameState.EndGame);
@@ -207,11 +216,16 @@ public class GameplayManager : MonoBehaviour
 
     public void UndoMove()
     {
-        if (m_CurrentBoardStateID <= 0) return;
+        //2 is a dirty fix, disallow undoing into setup phase
+        if (m_CurrentBoardStateID <= 2) return;
 
         m_CurrentBoardStateID -= 1;
         SwapTurns();
         LoadBoardState();
+
+        //If the game was done, now it's not anymore!
+        if (m_GameState == GameState.EndGame)
+            SetGameState(GameState.Game);
     }
 
     public void RedoMove()
@@ -298,7 +312,7 @@ public class GameplayManager : MonoBehaviour
                     m_VisualBoard.ShowUnits(m_CurrentPlayer, true);
                     m_VisualBoard.ShowUnits(OtherPlayer(m_CurrentPlayer), false);
 
-                    m_EndGamePanel.SetActive(false);
+                    MenuManager.Instance.ShowEndGameMenu(false);
 
                     Debug.Log("White setup!");
                 }
@@ -310,7 +324,7 @@ public class GameplayManager : MonoBehaviour
                     m_VisualBoard.ShowUnits(m_CurrentPlayer, true);
                     m_VisualBoard.ShowUnits(OtherPlayer(m_CurrentPlayer), true);
 
-                    m_EndGamePanel.SetActive(false);
+                    MenuManager.Instance.ShowEndGameMenu(false);
                 }
                 break;
 
@@ -320,7 +334,7 @@ public class GameplayManager : MonoBehaviour
                     m_VisualBoard.ShowUnits(m_CurrentPlayer, true);
                     m_VisualBoard.ShowUnits(OtherPlayer(m_CurrentPlayer), true);
 
-                    if (m_EndGameText == null || m_EndGamePanel == null)
+                    if (m_EndGameText == null)
                         return;
 
                     //Set the text
@@ -341,13 +355,13 @@ public class GameplayManager : MonoBehaviour
                     //If both players where humans or AI's just show the color
                     else
                     {
-                        text = m_CurrentPlayer.ToString() + " wins!";     
+                        text = winner.ToString() + " wins!";     
                     }
 
                     m_EndGameText.text = text;
 
                     //Enable the panel
-                    m_EndGamePanel.SetActive(true);
+                    MenuManager.Instance.ShowEndGameMenu(true);
                 }
                 break;
 
