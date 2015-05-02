@@ -242,8 +242,8 @@ public class GameplayManager : MonoBehaviour
         if (m_CurrentPlayer == PlayerColor.White) { m_CurrentPlayer = PlayerColor.Black; }
         else                                      { m_CurrentPlayer = PlayerColor.White; }
 
-        m_VisualBoard.EnableUnitSelection(m_CurrentPlayer, true);
-        m_VisualBoard.EnableUnitSelection(OtherPlayer(m_CurrentPlayer), false);
+        //m_VisualBoard.EnableUnitSelection(m_CurrentPlayer, true);
+        //m_VisualBoard.EnableUnitSelection(OtherPlayer(m_CurrentPlayer), false);
 
         if (m_GameState == GameState.Setup)
         {
@@ -306,8 +306,8 @@ public class GameplayManager : MonoBehaviour
                 {
                     if (m_ConfirmFormationButton != null) { m_ConfirmFormationButton.SetActive(true); }
 
-                    m_VisualBoard.EnableUnitSelection(m_CurrentPlayer, true);
-                    m_VisualBoard.EnableUnitSelection(OtherPlayer(m_CurrentPlayer), false);
+                    //m_VisualBoard.EnableUnitSelection(m_CurrentPlayer, true);
+                    //m_VisualBoard.EnableUnitSelection(OtherPlayer(m_CurrentPlayer), false);
 
                     m_VisualBoard.ShowUnits(m_CurrentPlayer, true);
                     m_VisualBoard.ShowUnits(OtherPlayer(m_CurrentPlayer), false);

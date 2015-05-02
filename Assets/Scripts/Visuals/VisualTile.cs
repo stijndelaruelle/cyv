@@ -184,7 +184,8 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
 
     private void PlaceUnit()
     {
-        if (VisualUnit.m_DraggedUnit != null)
+        if (VisualUnit.m_DraggedUnit != null &&
+            GameplayManager.Instance.CurrentPlayer == VisualUnit.m_DraggedUnit.GetPlayerColor())
         {
             //Debug.Log("Place Unit!");
 

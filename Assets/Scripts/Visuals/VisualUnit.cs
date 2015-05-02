@@ -27,7 +27,8 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         if (m_DraggedUnit != null) { m_DraggedUnit.Deselect(); }
         m_DraggedUnit = unit;
 
-        if (unit != null)
+        //Only enlarge units that we actually can pick up
+        if (unit != null && GameplayManager.Instance.CurrentPlayer == m_PlayerColor)
         {
             transform.localScale = new Vector3(2.0f, 2.0f, 2.0f);
         }
@@ -38,11 +39,7 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         m_DraggedUnit.ShowMovementRange(false);
         transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
 
-        if (GameplayManager.Instance.GameState == GameState.Setup ||
-            GameplayManager.Instance.CurrentPlayer == m_PlayerColor)
-        {
-            EnableDragging(true);
-        }
+        EnableDragging(true);
 
         //We placed the unit out of the valid fields
         if (transform.parent == m_ParentTransform)
@@ -155,7 +152,13 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     public void OnPointerDown(PointerEventData eventData)
     {
         //This means the user used the click & click method to place units
-        //Debug.Log("OnPointerDown VisualUnit");
+        if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor)
+        {
+            Select(this);
+            ShowMovementRange(true);
+            return;
+        }
+
         OnBeginDrag(eventData);
         m_IsDragged = false;
 
@@ -166,6 +169,9 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     //IBeginDragHandler
     public void OnBeginDrag(PointerEventData eventData)
     {
+        if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor)
+            return;
+
         //Debug.Log("Begin Drag!");
         Select(this);
 
@@ -180,13 +186,18 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     //IDragHandler
     public void OnDrag(PointerEventData eventData)
     {
+        if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor)
+            return;
+
         transform.position = Input.mousePosition;
     }
 
     //IEndDragHandler
     public void OnEndDrag(PointerEventData eventData)
     {
-        //Debug.Log("End Drag!");
+        if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor)
+            return;
+
         Select(null);
 
         //Play a sound effect
