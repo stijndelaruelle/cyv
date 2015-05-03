@@ -434,10 +434,12 @@ public class Unit
         return totalMoves;
     }
 
-    public void ProcessMove(int id)
+    public bool ProcessMove(int id)
     {
         //Figure out which tile to go to
         //STIJN: Must be done more performant
+        bool promote = false;
+
         int totalFoundId = 0;
         Tile foundTile = null;
         for (int i = 0; i < BoardState.DIR_NUM; ++i)
@@ -454,11 +456,21 @@ public class Unit
 
         if (m_Tile != null && foundTile != null)
         {
+            Unit currentUnit = m_Tile.GetUnit();
+
+            //Do we promote by doing this move?
+            if (this.UnitDefinition.Tier <= currentUnit.UnitDefinition.Tier)
+            {
+                promote = true;
+            }
+
             //Remove ourselves from our old tile
             m_Tile.SetUnit(null);
 
             //And go to a new one
             SetTile(foundTile);
         }
+
+        return promote;
     }
 }

@@ -375,7 +375,7 @@ public class VisualBoard : MonoBehaviour
         if (boardState.PromotionTileID != -1)
         {
             //Play a nice particle effect & sound that indicates the promtion
-            m_VisualTiles[boardState.PromotionTileID].HighlightPromotion(true);
+            //m_VisualTiles[boardState.PromotionTileID].HighlightPromotion(true);
         }
 
         if (boardState.FromTileID == -1 && boardState.ToTileID == -1)

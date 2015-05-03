@@ -379,16 +379,24 @@ public class BoardState
                 for (int moveid = 0; moveid < totalMoves; ++moveid)
                 {
                     nextBoardState.CopyBoard(this);
-                    nextBoardState.Units[i].ProcessMove(moveid);
+                    bool doWePromote = nextBoardState.Units[i].ProcessMove(moveid);
 
                     //if (id == 1)
                     //{
                     //    Debug.Log("");
                     //}
 
-                    //Only
-                    if (id < boardStates.Count) { nextBoardState.SwapCurrentPlayer(); }
-                    nextBoardState.ProcessAllMoves(boardStates, id);
+                    if (doWePromote)
+                    {
+                        //Check all the possible promotion options
+
+                        //For each of them process all the moves
+                    }
+                    else
+                    {
+                        if (id < boardStates.Count) { nextBoardState.SwapCurrentPlayer(); }
+                        nextBoardState.ProcessAllMoves(boardStates, id);
+                    }
 
                     //Get the value and make and compare it
                     bool addMove = false;

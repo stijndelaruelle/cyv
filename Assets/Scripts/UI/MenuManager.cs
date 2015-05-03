@@ -58,6 +58,8 @@ public class MenuManager : MonoBehaviour
         HideAll();
         ShowCommon(true);
         m_MainMenuPanel.SetActive(true);
+
+        AnalyticsManager.Instance.LogScreen("Main Menu");
     }
 
     public void ShowNewGame()
@@ -68,6 +70,8 @@ public class MenuManager : MonoBehaviour
         HideAll();
         ShowCommon(true);
         m_NewGamePanel.SetActive(true);
+
+        AnalyticsManager.Instance.LogScreen("New Game");
     }
 
     public void ShowManual()
@@ -78,6 +82,8 @@ public class MenuManager : MonoBehaviour
         HideAll();
         ShowCommon(true);
         m_ManualPanel.SetActive(true);
+
+        AnalyticsManager.Instance.LogScreen("Manual");
     }
 
     public void ShowOptions()
@@ -88,6 +94,8 @@ public class MenuManager : MonoBehaviour
         HideAll();
         ShowCommon(true);
         m_OptionsPanel.SetActive(true);
+
+        AnalyticsManager.Instance.LogScreen("Options");
     }
 
     public void ShowCredits()
@@ -98,6 +106,8 @@ public class MenuManager : MonoBehaviour
         HideAll();
         ShowCommon(true);
         m_CreditsPanel.SetActive(true);
+
+        AnalyticsManager.Instance.LogScreen("Credits");
     }
 
     public void ShowInGameMenu()
@@ -108,6 +118,8 @@ public class MenuManager : MonoBehaviour
         HideAll();
         ShowCommon(false);
         m_InGamePanel.SetActive(true);
+
+        AnalyticsManager.Instance.LogScreen("Resume");
     }
 
     public void ShowEndGameMenu(bool show)

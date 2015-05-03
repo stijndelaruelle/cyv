@@ -67,6 +67,8 @@ public class GameplayManager : MonoBehaviour
 
     private GameMode m_GameMode = GameMode.PassAndPlay;
 
+    private bool m_AlreadyFinishedGame = false;
+
     //Singleton
     private static GameplayManager m_Instance;
     public static GameplayManager Instance
@@ -109,6 +111,7 @@ public class GameplayManager : MonoBehaviour
         m_PlayerTypes[0] = playerType1;
         m_PlayerTypes[1] = playerType2;
         m_CurrentPlayer = PlayerColor.White;
+        m_AlreadyFinishedGame = false;
 
         //Set game state to setup
         SetGameState(GameState.Setup);
@@ -139,6 +142,20 @@ public class GameplayManager : MonoBehaviour
         SetGameMode(gameMode);
 
         SaveBoardState();
+
+        //Analytics
+        long value = 0;
+
+        //0 = both human
+        //1 = white player, black AI
+        //2 = white AI, black player,
+        //3 = both Ai
+        if (m_PlayerTypes[0] == PlayerType.Human && m_PlayerTypes[1] == PlayerType.Human) { value = 0; }
+        if (m_PlayerTypes[0] == PlayerType.Human && m_PlayerTypes[1] == PlayerType.AI)    { value = 1; }
+        if (m_PlayerTypes[0] == PlayerType.AI && m_PlayerTypes[1] == PlayerType.Human)    { value = 2; }
+        if (m_PlayerTypes[0] == PlayerType.AI && m_PlayerTypes[1] == PlayerType.AI)       { value = 3; }
+
+        AnalyticsManager.Instance.LogEvent("Default", "New Game", "Started a new game.", value);
     }
 
     public void HighlightSetupZone(bool enable)
@@ -156,6 +173,9 @@ public class GameplayManager : MonoBehaviour
         {
             int count = m_BoardStates.Count - m_CurrentBoardStateID - 1;
             m_BoardStates.RemoveRange(m_CurrentBoardStateID + 1, count);
+
+            //Analytics
+            AnalyticsManager.Instance.LogEvent("Default", "Rethink", "Undid a move, and made another one.", 0);
         }
 
         //Create a new boardstate
@@ -196,6 +216,8 @@ public class GameplayManager : MonoBehaviour
         {
             AIMove();
         }
+
+        AnalyticsManager.Instance.LogEvent("Default", "Moved", "Did a move.", m_CurrentBoardStateID);
     }
 
     private void CheckGameStates()
@@ -371,6 +393,13 @@ public class GameplayManager : MonoBehaviour
 
                     //Enable the panel
                     MenuManager.Instance.ShowEndGameMenu(true);
+
+                    if (!m_AlreadyFinishedGame)
+                    {
+                        AnalyticsManager.Instance.LogEvent("Default", "End Game", "The game ended.", (long)winner);
+                    }
+
+                    m_AlreadyFinishedGame = true;
                 }
                 break;
 
