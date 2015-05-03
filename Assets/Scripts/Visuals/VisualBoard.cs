@@ -287,28 +287,31 @@ public class VisualBoard : MonoBehaviour
 
     public void SaveBoardState()
     {
+        //Save the state as it is seen visually to the data container (BoardState)
         if (m_CurrentBoardState == null) return;
 
         for (int i = 0; i < m_VisualUnits.Count; ++i)
         {
+            //The tile this unit used to be on (on the data container side)
             Tile prevTile = CurrentBoardState.Units[i].GetTile();
 
+            //The tile this unit is on right now
             int tileID = m_VisualUnits[i].GetTile().ID;
 
             Tile currentTile = null;
-            if (tileID != -1)
-            {
-                currentTile = CurrentBoardState.Tiles[tileID];
-            }
+            if (tileID != -1) { currentTile = CurrentBoardState.Tiles[tileID]; }
 
-            Tile prevBoardStateTile = CurrentBoardState.Units[i].GetTile();
+            //Set the tile
             CurrentBoardState.Units[i].SetTile(currentTile);
 
-            if (prevTile != null && prevTile.ID != tileID)
+            //Flag as from or to tile (for highlighting)
+            if (prevTile != null &&
+                currentTile != null &&
+                prevTile.ID != tileID)
             {
                 //Something changed here, let's highlight the previous tile
-                m_VisualTiles[prevTile.ID].HighlightMovement(true, true);
-                m_VisualTiles[tileID].HighlightMovement(true, false);
+                CurrentBoardState.FromTileID = prevTile.ID;
+                CurrentBoardState.ToTileID = currentTile.ID;
             }
         }
     }
@@ -322,21 +325,34 @@ public class VisualBoard : MonoBehaviour
             if (unit.GetTile() == null)
             {
                 m_VisualUnits[i].SetTile(null);
+                CurrentBoardState.Units[i].SetTile(null);
             }
             else
             {
-                VisualTile prevTile = m_VisualUnits[i].GetTile(); //Works only when the visuals differ (Undo/redo or AI move)
-                VisualTile newTile = m_VisualTiles[unit.GetTile().ID];
-                m_VisualUnits[i].SetTile(newTile);
+                int tileID = unit.GetTile().ID;
+                VisualTile newVisualTile = m_VisualTiles[tileID];
+                m_VisualUnits[i].SetTile(newVisualTile);
 
-                if (prevTile != newTile)
-                {
-                    //Something changed here, let's highlight the previous tile
-                    prevTile.HighlightMovement(true, true);
-                    newTile.HighlightMovement(true, false);
-                }
+                Tile currentTile = null;
+                if (tileID != -1) { currentTile = CurrentBoardState.Tiles[tileID]; }
+
+                //Set the tile
+                CurrentBoardState.Units[i].SetTile(currentTile);
             }
         }
+
+        //Highlight
+        if (boardState.FromTileID != -1)
+            m_VisualTiles[boardState.FromTileID].HighlightMovement(true, true);
+
+        if (boardState.ToTileID != -1)
+            m_VisualTiles[boardState.ToTileID].HighlightMovement(true, false);
+
+        if (boardState.FromTileID == -1 && boardState.ToTileID == -1)
+        {
+            VisualTile.UnHighlightMovement(true);
+            VisualTile.UnHighlightMovement(false);
+        }     
     }
 
     public void EnableUnitSelection(PlayerColor playerColor, bool state)

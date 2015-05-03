@@ -178,6 +178,9 @@ public class GameplayManager : MonoBehaviour
 
         SwapTurns();
 
+        //Load the current boardstate (AI changed it without visually showing, non AI also has to show the last move)
+        m_VisualBoard.LoadBoardState(m_VisualBoard.CurrentBoardState);
+
         if (m_GameState == GameState.EndGame)
             return;
 
@@ -187,9 +190,6 @@ public class GameplayManager : MonoBehaviour
         {
             AIMove();
         }
-
-        //Load the current boardstate (AI changed it without visually showing, non AI also has to show the last move)
-        m_VisualBoard.LoadBoardState(m_VisualBoard.CurrentBoardState);
     }
 
     private void CheckGameStates()

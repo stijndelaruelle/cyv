@@ -154,8 +154,18 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         //This means the user used the click & click method to place units
         if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor)
         {
-            Select(this);
-            ShowMovementRange(true);
+            //If we are moving a character here, 
+            if (m_DraggedUnit != null && m_DraggedUnit.GetPlayerColor() == GameplayManager.Instance.CurrentPlayer)
+            {
+                m_Tile.OnPointerDown(eventData);
+            }
+            //If we're just checking the movement range
+            else
+            {
+                Select(this);
+                ShowMovementRange(true);
+            }
+
             return;
         }
 

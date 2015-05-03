@@ -61,6 +61,23 @@ public class BoardState
     private int m_Alpha = 0;
     private int m_Beta = 0;
 
+    //The last used tiles, for highlighting purposes
+    private int m_FromTileID = -1;
+    private int m_ToTileID = -1;
+
+    public int FromTileID
+    {
+        get { return m_FromTileID; }
+        set { m_FromTileID = value; }
+    }
+
+    public int ToTileID
+    {
+        get { return m_ToTileID; }
+        set { m_ToTileID = value; }
+    }
+
+    //Functions
     public void GenerateDefaultState(int boardSize)
     {
         //Generate board
@@ -311,7 +328,8 @@ public class BoardState
     public void CopyBoard(BoardState otherState)
     {
         m_CurrentPlayer = otherState.m_CurrentPlayer;
-        //m_Value = otherState.Value;
+        m_FromTileID = otherState.m_FromTileID;
+        m_ToTileID = otherState.m_ToTileID;
 
         //Loop over all the units
         List<Unit> otherUnits = otherState.Units;
@@ -443,7 +461,12 @@ public class BoardState
 
     public void ProcessBestMove()
     {
+        //Only called by AI!
+        m_FromTileID = Units[m_BestMove.unitID].GetTile().ID;
+
         Units[m_BestMove.unitID].ProcessMove(m_BestMove.moveID);
+
+        m_ToTileID = Units[m_BestMove.unitID].GetTile().ID;
     }
 
     public Tile GetTile(int tileID)

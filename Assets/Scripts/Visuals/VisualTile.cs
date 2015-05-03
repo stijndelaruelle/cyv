@@ -99,7 +99,12 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
             if (from)
             {
                 //There can only be one!
-                if (m_FromTile != null && m_ToTile != m_FromTile) { m_FromTile.HighlightMovement(false, from); }
+                if (m_FromTile != null &&
+                    m_FromTile != this &&
+                    m_ToTile != m_FromTile)
+                {
+                    m_FromTile.HighlightMovement(false, from);
+                }
 
                 color = new Color(1.0f, 0.0f, 1.0f, 0.75f);
                 m_FromTile = this;
@@ -107,7 +112,12 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
             else
             {
                 //There can only be one!
-                if (m_ToTile != null && m_ToTile != m_FromTile) { m_ToTile.HighlightMovement(false, from); }
+                if (m_ToTile != null &&
+                    m_ToTile != this &&
+                    m_ToTile != m_FromTile)
+                {
+                    m_ToTile.HighlightMovement(false, from);
+                }
 
                 color = new Color(1.0f, 1.0f, 0.0f, 0.75f);
                 m_ToTile = this;
@@ -120,6 +130,20 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
         }
 
         SetColor(color);
+    }
+
+    public static void UnHighlightMovement(bool from)
+    {
+        if (from)
+        {
+            if (m_FromTile != null)
+                m_FromTile.HighlightMovement(false, from);
+        }
+        else
+        {
+            if (m_ToTile != null)
+                m_ToTile.HighlightMovement(false, from);
+        }
     }
 
     public void Highlight(bool enable)
