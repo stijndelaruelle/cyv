@@ -232,6 +232,12 @@ public class VisualBoard : MonoBehaviour
         }
 
         gameObject.GetComponent<RectTransform>().anchoredPosition = new Vector3(0.0f, 40.0f);
+
+        //Subscribe to all the promotion events
+        foreach (VisualTile visualTile in m_VisualTiles)
+        {
+            visualTile.OnAllowPromition += OnAllowPromition;
+        }
     }
 
     private void GenerateUnits()
@@ -275,6 +281,12 @@ public class VisualBoard : MonoBehaviour
                 }
             }
         }
+
+        //Subscribe to all the promotion events
+        foreach (VisualUnit visualUnit in m_VisualUnits)
+        {
+            visualUnit.OnPromote += OnPromote;
+        }
     }
 
     public void SetBoardState(BoardState boardState)
@@ -290,6 +302,7 @@ public class VisualBoard : MonoBehaviour
         //Save the state as it is seen visually to the data container (BoardState)
         if (m_CurrentBoardState == null) return;
 
+        bool promote = true;
         for (int i = 0; i < m_VisualUnits.Count; ++i)
         {
             //The tile this unit used to be on (on the data container side)
@@ -312,6 +325,17 @@ public class VisualBoard : MonoBehaviour
                 //Something changed here, let's highlight the previous tile
                 CurrentBoardState.FromTileID = prevTile.ID;
                 CurrentBoardState.ToTileID = currentTile.ID;
+            }
+
+            //Flag as the promotion tile
+            if (prevTile == null &&
+                currentTile != null)
+            {
+                //If this happens more than once, we're probably not promoting but setting up
+                if (!promote) { CurrentBoardState.PromotionTileID = -1; }
+                else          { CurrentBoardState.PromotionTileID = currentTile.ID; }
+
+                promote = false;
             }
         }
     }
@@ -343,15 +367,21 @@ public class VisualBoard : MonoBehaviour
 
         //Highlight
         if (boardState.FromTileID != -1)
-            m_VisualTiles[boardState.FromTileID].HighlightMovement(true, true);
+            m_VisualTiles[boardState.FromTileID].HighlightMovementHistory(true, true);
 
         if (boardState.ToTileID != -1)
-            m_VisualTiles[boardState.ToTileID].HighlightMovement(true, false);
+            m_VisualTiles[boardState.ToTileID].HighlightMovementHistory(true, false);
+
+        if (boardState.PromotionTileID != -1)
+        {
+            //Play a nice particle effect & sound that indicates the promtion
+            m_VisualTiles[boardState.PromotionTileID].HighlightPromotion(true);
+        }
 
         if (boardState.FromTileID == -1 && boardState.ToTileID == -1)
         {
-            VisualTile.UnHighlightMovement(true);
-            VisualTile.UnHighlightMovement(false);
+            VisualTile.UnHighlightMovementHistory(true);
+            VisualTile.UnHighlightMovementHistory(false);
         }     
     }
 
@@ -401,6 +431,27 @@ public class VisualBoard : MonoBehaviour
         }
     }
 
+    public bool HighlightUpgradableUnits(PlayerColor playerColor, bool enable)
+    {
+        bool foundUnits = false;
+
+        for (int i = 0; i < m_VisualUnits.Count; ++i)
+        {
+            if (m_VisualUnits[i].GetPlayerColor() == playerColor &&
+                m_VisualUnits[i].GetUnitDefinition().Tier == 2)
+            {
+                VisualTile visualTile = m_VisualUnits[i].GetTile();
+                if (visualTile != m_VisualUnits[i].GetReserveTile())
+                {
+                    visualTile.HighlightPromotion(enable);
+                    foundUnits = true;
+                }
+            }
+        }
+
+        return foundUnits;
+    }
+
     public void FlipBoard(bool enable)
     {
         //Flip the board
@@ -437,5 +488,70 @@ public class VisualBoard : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void OnAllowPromition(PlayerColor playerColor)
+    {
+        //This player is allowed to promote a unit
+        bool foundUnits = HighlightUpgradableUnits(playerColor, true);
+
+        if (foundUnits)
+        {
+            GameplayManager.Instance.SetGameState(GameState.Promotion);
+        }
+        else
+        {
+            //If we didn't find anything, just commit the move
+            GameplayManager.Instance.SubmitMove();
+        }
+    }
+
+    public void OnPromote(VisualUnit visualUnit)
+    {
+        if (visualUnit.GetTile() == null)
+            return;
+
+        //Get the upgraded type
+        UnitType unitType = visualUnit.GetUnitDefinition().UnitType;
+        UnitType promotedType = visualUnit.GetUnitDefinition().PromotedType;
+
+        if (unitType == promotedType)
+        {
+            Debug.Log("You're trying to upgade an unupgradable Unit!");
+            return;
+        }
+
+        if (visualUnit.GetTile().IsHighligtedPromotion == false)
+        {
+            Debug.Log("You cannot even upgrade this unit!");
+            return;
+        }
+
+        //Change the gamestate again
+        GameplayManager.Instance.SetGameState(GameState.Game);
+
+        //Get the first available unit of the promoted type
+        for (int i = 0; i < m_VisualUnits.Count; ++i)
+        {
+            //Corect type, correct color, and unused!
+            if (m_VisualUnits[i].GetUnitDefinition().UnitType == promotedType &&
+                m_VisualUnits[i].GetPlayerColor() == visualUnit.GetPlayerColor() &&
+                m_VisualUnits[i].GetTile().ID == -1)
+            {
+                //We found an available unit!
+                VisualUnit newUnit = m_VisualUnits[i];
+
+                //Reset the tile colors
+                HighlightUpgradableUnits(visualUnit.GetPlayerColor(), false);
+
+                //Now swap it with the current one
+                VisualTile visualTile = visualUnit.GetTile();
+                visualUnit.SetTile(null);
+                newUnit.SetTile(visualTile);
+            }
+        }
+
+        //We're done with our move
+        GameplayManager.Instance.SubmitMove();
     }
 }

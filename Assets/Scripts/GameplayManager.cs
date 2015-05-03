@@ -8,7 +8,8 @@ public enum GameState
 {
     Setup,
     Game,
-    EndGame
+    EndGame,
+    Promotion //While promoting
 }
 
 public enum PlayerType
@@ -22,6 +23,11 @@ public enum GameMode
     PassAndPlay, //Board flips turns after every move (unless AI is involved)
     TabletPlay   //Black units are flipped at the beginning of the game
 }
+
+//Delegates
+public delegate void VoidDelegate();
+public delegate void PlayerColorDelegate(PlayerColor playerColor);
+public delegate void VisualUnitDelegate(VisualUnit visualUnit);
 
 public class GameplayManager : MonoBehaviour
 {
@@ -366,6 +372,9 @@ public class GameplayManager : MonoBehaviour
                     //Enable the panel
                     MenuManager.Instance.ShowEndGameMenu(true);
                 }
+                break;
+
+            case GameState.Promotion:
                 break;
 
             default:

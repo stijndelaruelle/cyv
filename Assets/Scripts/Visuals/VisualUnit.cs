@@ -7,7 +7,12 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
 {
     //This class just visually represents the Unit & the player can interact with it.
     //It does in no way, shape or form hold any game data.
+
+    //Events
+    public VisualUnitDelegate OnPromote;
+
     public static VisualUnit m_DraggedUnit = null;
+
     private VisualTile m_Tile = null;
     private VisualTile m_ReserveTile = null; //The tile we need to go to when we die
 
@@ -151,6 +156,13 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     //IPointerDownHandler
     public void OnPointerDown(PointerEventData eventData)
     {
+        //If we're allowed to promote this unit
+        if (GameplayManager.Instance.GameState == GameState.Promotion)
+        {
+            if (OnPromote != null) OnPromote(this);
+            return;
+        }
+
         //This means the user used the click & click method to place units
         if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor)
         {
@@ -179,6 +191,9 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     //IBeginDragHandler
     public void OnBeginDrag(PointerEventData eventData)
     {
+        if (GameplayManager.Instance.GameState == GameState.Promotion)
+            return;
+
         if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor)
             return;
 
@@ -196,6 +211,9 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     //IDragHandler
     public void OnDrag(PointerEventData eventData)
     {
+        if (GameplayManager.Instance.GameState == GameState.Promotion)
+            return;
+
         if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor)
             return;
 
@@ -207,6 +225,9 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     {
         //We should always be able to deselect, otherwise showing the enemies movement range bugs out on the last used unit.
         Select(null);
+
+        if (GameplayManager.Instance.GameState == GameState.Promotion)
+            return;
 
         if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor)
             return;

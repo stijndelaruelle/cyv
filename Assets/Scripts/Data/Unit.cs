@@ -25,6 +25,14 @@ public class UnitDefinition
         get { return m_UnitType; }
     }
 
+    //The unit we will promote in
+    protected UnitType m_PromotedType = UnitType.Mountain;
+    public UnitType PromotedType
+    {
+        get { return m_PromotedType; }
+
+    }
+
     protected int[] m_MaxMoveCount = new int[BoardState.DIR_NUM]; //-1 = infinite
     public int GetMoveCount(int dir, PlayerColor playerColor)
     {
@@ -41,6 +49,12 @@ public class UnitDefinition
     public int Value
     {
         get { return m_Value; }
+    }
+
+    protected int m_Tier = 0; //Used for promotions
+    public int Tier
+    {
+        get { return m_Tier; }
     }
 
     protected int m_StartAmount = 0; //Amount of these units you start with
@@ -73,7 +87,9 @@ public class MountainUnitDefinition : UnitDefinition
     public MountainUnitDefinition()
     {
         m_UnitType = UnitType.Mountain;
+        m_PromotedType = UnitType.Mountain;
         m_Value = 0;
+        m_Tier = 1;
 
         for (int i = 0; i < m_MaxMoveCount.Length; ++i)
         {
@@ -92,7 +108,9 @@ public class KingUnitDefinition : UnitDefinition
     public KingUnitDefinition()
     {
         m_UnitType = UnitType.King;
+        m_PromotedType = UnitType.King;
         m_Value = 9999; //overrules all, meaning that if we can take the king the AI will always prefer it
+        m_Tier = 1;
 
         for (int i = 0; i < m_MaxMoveCount.Length; ++i)
         {
@@ -111,7 +129,9 @@ public class RabbleUnitDefinition : UnitDefinition
     public RabbleUnitDefinition()
     {
         m_UnitType = UnitType.Rabble;
+        m_PromotedType = UnitType.Rabble;
         m_Value = 1;
+        m_Tier = 1;
 
         for (int i = 0; i < m_MaxMoveCount.Length; ++i)
         {
@@ -137,7 +157,9 @@ public class LightHorseUnitDefinition : UnitDefinition
     public LightHorseUnitDefinition()
     {
         m_UnitType = UnitType.LightHorse;
+        m_PromotedType = UnitType.HeavyHorse;
         m_Value = 3;
+        m_Tier = 2;
 
         for (int i = 0; i < m_MaxMoveCount.Length; ++i)
         {
@@ -160,7 +182,9 @@ public class SpearUnitDefinition : UnitDefinition
     public SpearUnitDefinition()
     {
         m_UnitType = UnitType.Spear;
+        m_PromotedType = UnitType.Elephant;
         m_Value = 3;
+        m_Tier = 2;
 
         for (int i = 0; i < m_MaxMoveCount.Length; ++i)
         {
@@ -183,7 +207,9 @@ public class CrossbowUnitDefinition : UnitDefinition
     public CrossbowUnitDefinition()
     {
         m_UnitType = UnitType.Crossbow;
+        m_PromotedType = UnitType.Catapult;
         m_Value = 3;
+        m_Tier = 2;
 
         for (int i = 0; i < m_MaxMoveCount.Length; ++i)
         {
@@ -207,7 +233,9 @@ public class HeavyHorseUnitDefinition : UnitDefinition
     public HeavyHorseUnitDefinition()
     {
         m_UnitType = UnitType.HeavyHorse;
+        m_PromotedType = UnitType.HeavyHorse;
         m_Value = 5;
+        m_Tier = 3;
 
         for (int i = 0; i < m_MaxMoveCount.Length; ++i)
         {
@@ -220,7 +248,7 @@ public class HeavyHorseUnitDefinition : UnitDefinition
 
         m_CanJump = false;
         m_MustJump = false;
-        m_StartAmount = 1;
+        m_StartAmount = 2;
         m_MaxAmount = 2;
     }
 }
@@ -230,7 +258,9 @@ public class ElephantUnitDefinition : UnitDefinition
     public ElephantUnitDefinition()
     {
         m_UnitType = UnitType.Elephant;
+        m_PromotedType = UnitType.Elephant;
         m_Value = 5;
+        m_Tier = 3;
 
         for (int i = 0; i < m_MaxMoveCount.Length; ++i)
         {
@@ -243,7 +273,7 @@ public class ElephantUnitDefinition : UnitDefinition
 
         m_CanJump = false;
         m_MustJump = false;
-        m_StartAmount = 1;
+        m_StartAmount = 2;
         m_MaxAmount = 2;
     }
 }
@@ -253,7 +283,9 @@ public class CatapultUnitDefinition : UnitDefinition
     public CatapultUnitDefinition()
     {
         m_UnitType = UnitType.Catapult;
+        m_PromotedType = UnitType.Catapult;
         m_Value = 5;
+        m_Tier = 3;
 
         for (int i = 0; i < m_MaxMoveCount.Length; ++i)
         {
@@ -267,7 +299,7 @@ public class CatapultUnitDefinition : UnitDefinition
 
         m_CanJump = true;
         m_MustJump = true;
-        m_StartAmount = 1;
+        m_StartAmount = 2;
         m_MaxAmount = 2;
     }
 }
@@ -277,7 +309,9 @@ public class DragonUnitDefinition : UnitDefinition
     public DragonUnitDefinition()
     {
         m_UnitType = UnitType.Dragon;
+        m_PromotedType = UnitType.Dragon;
         m_Value = 9;
+        m_Tier = 4;
 
         for (int i = 0; i < m_MaxMoveCount.Length; ++i)
         {

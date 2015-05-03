@@ -64,6 +64,7 @@ public class BoardState
     //The last used tiles, for highlighting purposes
     private int m_FromTileID = -1;
     private int m_ToTileID = -1;
+    private int m_PromotionTileID = -1;
 
     public int FromTileID
     {
@@ -75,6 +76,12 @@ public class BoardState
     {
         get { return m_ToTileID; }
         set { m_ToTileID = value; }
+    }
+
+    public int PromotionTileID
+    {
+        get { return m_PromotionTileID; }
+        set { m_PromotionTileID = value; }
     }
 
     //Functions
@@ -330,6 +337,7 @@ public class BoardState
         m_CurrentPlayer = otherState.m_CurrentPlayer;
         m_FromTileID = otherState.m_FromTileID;
         m_ToTileID = otherState.m_ToTileID;
+        m_PromotionTileID = otherState.PromotionTileID;
 
         //Loop over all the units
         List<Unit> otherUnits = otherState.Units;
@@ -467,6 +475,9 @@ public class BoardState
         Units[m_BestMove.unitID].ProcessMove(m_BestMove.moveID);
 
         m_ToTileID = Units[m_BestMove.unitID].GetTile().ID;
+
+        //If a promotion happened set the tile here
+        //m_PromotionTileID
     }
 
     public Tile GetTile(int tileID)

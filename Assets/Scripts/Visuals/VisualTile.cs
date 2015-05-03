@@ -28,11 +28,20 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
 {
     //This class just visually represents the Unit & the player can interact with it.
     //It does in no way, shape or form hold any game data.
+
+    //Events
+    public PlayerColorDelegate OnAllowPromition;
+
     private VisualTile[] m_Neighbours;
     private Color m_OriginalColor = Color.magenta; //so funny
 
     private bool m_IsHighlightingMovement = false;
     private bool m_IsHighlighted = false;
+    private bool m_IsHighlightedPromotion = false;
+    public bool IsHighligtedPromotion
+    {
+        get { return m_IsHighlightedPromotion; }
+    }
 
     public static VisualTile m_FromTile = null;
     public static VisualTile m_ToTile = null;
@@ -43,6 +52,7 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
         get { return m_ID; }
     }
 
+    //Functions
     private void Awake()
     {
         m_Neighbours = new VisualTile[BoardState.DIR_NUM];
@@ -89,7 +99,7 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
         return false;
     }
 
-    public void HighlightMovement(bool enable, bool from)
+    public void HighlightMovementHistory(bool enable, bool from)
     {
         m_IsHighlightingMovement = enable;
 
@@ -103,7 +113,7 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
                     m_FromTile != this &&
                     m_ToTile != m_FromTile)
                 {
-                    m_FromTile.HighlightMovement(false, from);
+                    m_FromTile.HighlightMovementHistory(false, from);
                 }
 
                 color = new Color(1.0f, 0.0f, 1.0f, 0.75f);
@@ -116,7 +126,7 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
                     m_ToTile != this &&
                     m_ToTile != m_FromTile)
                 {
-                    m_ToTile.HighlightMovement(false, from);
+                    m_ToTile.HighlightMovementHistory(false, from);
                 }
 
                 color = new Color(1.0f, 1.0f, 0.0f, 0.75f);
@@ -132,17 +142,17 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
         SetColor(color);
     }
 
-    public static void UnHighlightMovement(bool from)
+    public static void UnHighlightMovementHistory(bool from)
     {
         if (from)
         {
             if (m_FromTile != null)
-                m_FromTile.HighlightMovement(false, from);
+                m_FromTile.HighlightMovementHistory(false, from);
         }
         else
         {
             if (m_ToTile != null)
-                m_ToTile.HighlightMovement(false, from);
+                m_ToTile.HighlightMovementHistory(false, from);
         }
     }
 
@@ -212,6 +222,16 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
         }
     }
 
+    public void HighlightPromotion(bool enable)
+    {
+        //Highlight this tile for a unit that wishes to promote
+        m_IsHighlightedPromotion = enable;
+
+        Color color = new Color(0.0f, 1.0f, 1.0f, 0.75f);
+        if (!enable) { color = m_OriginalColor; }
+        SetColor(color);
+    }
+
     public void SetColor(Color color)
     {
         if (m_OriginalColor == Color.magenta)
@@ -229,6 +249,9 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
     //IPointerDownHandler
     public void OnPointerDown(PointerEventData eventData)
     {
+        if (GameplayManager.Instance.GameState == GameState.Promotion)
+            return;
+
         if (VisualUnit.m_DraggedUnit != null)
         {
             //This means the user used the click & click method to place units
@@ -272,16 +295,27 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
                     return;
                 }
 
+                bool promote = false;
+
                 //If we already have a child (which means we already hold a unit), make that move to the corresponding reserve tile
                 if (GetVisualUnit() != null)
                 {
                     VisualUnit currentUnit = transform.GetChild(0).GetComponent<VisualUnit>();
                     if (currentUnit != null) { currentUnit.SetTile(null); }
+
+                    //If this unit had an equal or higher rank than the unit that killed it, we allow the player to promote a unit!
+                    if (GameplayManager.Instance.GameState == GameState.Game &&
+                        VisualUnit.m_DraggedUnit.GetUnitDefinition().Tier <= currentUnit.GetUnitDefinition().Tier)
+                    {
+                        promote = true;
+                        if (OnAllowPromition != null) OnAllowPromition(VisualUnit.m_DraggedUnit.GetPlayerColor());
+                    }
                 }
 
                 //Only count as a "move" if we moved to a different tile (and not in setup phase of course)
                 if (GameplayManager.Instance.GameState != GameState.Setup &&
-                    this != VisualUnit.m_DraggedUnit.GetTile())
+                    this != VisualUnit.m_DraggedUnit.GetTile() &&
+                    !promote)
                 {
                     VisualUnit.m_DraggedUnit.SetTile(this);
                     GameplayManager.Instance.SubmitMove();
