@@ -291,16 +291,25 @@ public class VisualBoard : MonoBehaviour
 
         for (int i = 0; i < m_VisualUnits.Count; ++i)
         {
+            Tile prevTile = CurrentBoardState.Units[i].GetTile();
+
             int tileID = m_VisualUnits[i].GetTile().ID;
 
             Tile currentTile = null;
             if (tileID != -1)
             {
                 currentTile = CurrentBoardState.Tiles[tileID];
-                //currentTile.SetUnit(CurrentBoardState.Units[i]);
             }
 
+            Tile prevBoardStateTile = CurrentBoardState.Units[i].GetTile();
             CurrentBoardState.Units[i].SetTile(currentTile);
+
+            if (prevTile != null && prevTile.ID != tileID)
+            {
+                //Something changed here, let's highlight the previous tile
+                m_VisualTiles[prevTile.ID].HighlightMovement(true, true);
+                m_VisualTiles[tileID].HighlightMovement(true, false);
+            }
         }
     }
 
@@ -316,8 +325,16 @@ public class VisualBoard : MonoBehaviour
             }
             else
             {
+                VisualTile prevTile = m_VisualUnits[i].GetTile(); //Works only when the visuals differ (Undo/redo or AI move)
                 VisualTile newTile = m_VisualTiles[unit.GetTile().ID];
                 m_VisualUnits[i].SetTile(newTile);
+
+                if (prevTile != newTile)
+                {
+                    //Something changed here, let's highlight the previous tile
+                    prevTile.HighlightMovement(true, true);
+                    newTile.HighlightMovement(true, false);
+                }
             }
         }
     }

@@ -187,6 +187,9 @@ public class GameplayManager : MonoBehaviour
         {
             AIMove();
         }
+
+        //Load the current boardstate (AI changed it without visually showing, non AI also has to show the last move)
+        m_VisualBoard.LoadBoardState(m_VisualBoard.CurrentBoardState);
     }
 
     private void CheckGameStates()
@@ -289,8 +292,8 @@ public class GameplayManager : MonoBehaviour
         //Now we found our best, let's do that
         currentBoardState.ProcessBestMove();
 
-        //Load visually & done!
-        m_VisualBoard.LoadBoardState(currentBoardState);
+        //Show visually & Done!
+        m_VisualBoard.LoadBoardState(m_VisualBoard.CurrentBoardState);
         SubmitMove();
 
         yield return null;
