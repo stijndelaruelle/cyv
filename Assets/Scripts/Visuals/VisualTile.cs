@@ -311,6 +311,11 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
             PlaceUnit();
             VisualUnit.m_DraggedUnit.OnEndDrag(eventData);   
         }
+        else
+        {
+            //Just play a sound effect
+            AudioManager.Instance.PlaySound(AudioManager.SoundType.BoardTap);
+        }
     }
 
     //IDropHandler
@@ -359,7 +364,6 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
                         VisualUnit.m_DraggedUnit.GetUnitDefinition().Tier <= currentUnit.GetUnitDefinition().Tier)
                     {
                         promote = true;
-                        if (OnAllowPromition != null) OnAllowPromition(VisualUnit.m_DraggedUnit.GetPlayerColor());
                     }
                 }
 
@@ -375,7 +379,15 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
                 {
                     VisualUnit.m_DraggedUnit.SetTile(this);
                 }
+
+                if (promote)
+                {
+                    if (OnAllowPromition != null) OnAllowPromition(VisualUnit.m_DraggedUnit.GetPlayerColor());
+                }
             }
+
+            //Play a sound effect
+            AudioManager.Instance.PlaySound(AudioManager.SoundType.DropUnit);
         }
     }
 

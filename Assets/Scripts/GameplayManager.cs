@@ -320,6 +320,9 @@ public class GameplayManager : MonoBehaviour
         //Now we found our best, let's do that
         currentBoardState.ProcessBestMove();
 
+        //Play the move sound!
+        AudioManager.Instance.PlaySound(AudioManager.SoundType.DropUnit);
+
         //Show visually & Done!
         m_VisualBoard.LoadBoardState(m_VisualBoard.CurrentBoardState);
         SubmitMove();

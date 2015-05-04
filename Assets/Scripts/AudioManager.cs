@@ -15,7 +15,8 @@ public class AudioManager : MonoBehaviour
     {
         GrabUnit,
         DropUnit,
-        Promote
+        Promote,
+        BoardTap
     }
 
     [SerializeField]

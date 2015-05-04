@@ -407,27 +407,30 @@ public class BoardState
                             }
                         }
 
-                        //For each of them process all the moves
-                        //TEMP FIX TODO: Just pick a random one for now (otherwise another extra layer)
-                        int randID = Random.Range(0, promotableUnitIDs.Count);
-                        Unit promotedUnit = nextBoardState.Units[promotableUnitIDs[randID]];
-
-                        //Find an available upgrade unit
-                        for (int j = 0; j < nextBoardState.m_Units.Count; ++j)
+                        if (promotableUnitIDs.Count > 0)
                         {
-                            Unit unit = nextBoardState.m_Units[j];
+                            //For each of them process all the moves
+                            //TEMP FIX TODO: Just pick a random one for now (otherwise another extra layer)
+                            int randID = Random.Range(0, promotableUnitIDs.Count);
+                            Unit promotedUnit = nextBoardState.Units[promotableUnitIDs[randID]];
 
-                            //Corect type, correct color, and unused!
-                            if (unit.UnitDefinition.UnitType == promotedUnit.UnitDefinition.PromotedType &&
-                                unit.Owner == promotedUnit.Owner &&
-                                unit.GetTile() == null)
+                            //Find an available upgrade unit
+                            for (int j = 0; j < nextBoardState.m_Units.Count; ++j)
                             {
-                                //We found an available unit!
-                                //Now swap it with the current one
-                                Tile tile = promotedUnit.GetTile();
-                                promotedUnit.SetTile(null);
-                                unit.SetTile(tile);
-                                break;
+                                Unit unit = nextBoardState.m_Units[j];
+
+                                //Corect type, correct color, and unused!
+                                if (unit.UnitDefinition.UnitType == promotedUnit.UnitDefinition.PromotedType &&
+                                    unit.Owner == promotedUnit.Owner &&
+                                    unit.GetTile() == null)
+                                {
+                                    //We found an available unit!
+                                    //Now swap it with the current one
+                                    Tile tile = promotedUnit.GetTile();
+                                    promotedUnit.SetTile(null);
+                                    unit.SetTile(tile);
+                                    break;
+                                }
                             }
                         }
                     }
@@ -543,30 +546,33 @@ public class BoardState
                 }
             }
 
-            //For each of them process all the moves
-            //TEMP FIX TODO: Just pick a random one for now (otherwise another extra layer)
-            int randID = Random.Range(0, promotableUnitIDs.Count);
-            Unit promotedUnit = Units[promotableUnitIDs[randID]];
-
-            //Find an available upgrade unit
-            for (int j = 0; j < m_Units.Count; ++j)
+            if (promotableUnitIDs.Count > 0)
             {
-                Unit unit = m_Units[j];
+                //For each of them process all the moves
+                //TEMP FIX TODO: Just pick a random one for now (otherwise another extra layer)
+                int randID = Random.Range(0, promotableUnitIDs.Count);
+                Unit promotedUnit = Units[promotableUnitIDs[randID]];
 
-                //Corect type, correct color, and unused!
-                if (unit.UnitDefinition.UnitType == promotedUnit.UnitDefinition.PromotedType &&
-                    unit.Owner == promotedUnit.Owner &&
-                    unit.GetTile() == null)
+                //Find an available upgrade unit
+                for (int j = 0; j < m_Units.Count; ++j)
                 {
-                    //We found an available unit!
-                    //Now swap it with the current one
-                    Tile tile = promotedUnit.GetTile();
-                    promotedUnit.SetTile(null);
-                    unit.SetTile(tile);
-                    
-                    //Visually show the upgraded tile
-                    PromotionTileID = tile.ID;
-                    break;
+                    Unit unit = m_Units[j];
+
+                    //Corect type, correct color, and unused!
+                    if (unit.UnitDefinition.UnitType == promotedUnit.UnitDefinition.PromotedType &&
+                        unit.Owner == promotedUnit.Owner &&
+                        unit.GetTile() == null)
+                    {
+                        //We found an available unit!
+                        //Now swap it with the current one
+                        Tile tile = promotedUnit.GetTile();
+                        promotedUnit.SetTile(null);
+                        unit.SetTile(tile);
+
+                        //Visually show the upgraded tile
+                        PromotionTileID = tile.ID;
+                        break;
+                    }
                 }
             }
         }

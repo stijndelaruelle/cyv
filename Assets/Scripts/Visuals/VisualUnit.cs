@@ -236,15 +236,6 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     {
         //We should always be able to deselect, otherwise showing the enemies movement range bugs out on the last used unit.
         Select(null);
-
-        if (GameplayManager.Instance.GameState == GameState.Promotion)
-            return;
-
-        if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor)
-            return;
-
-        //Play a sound effect
-        AudioManager.Instance.PlaySound(AudioManager.SoundType.DropUnit);
     }
 
 }

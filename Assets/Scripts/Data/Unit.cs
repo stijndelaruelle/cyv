@@ -456,10 +456,11 @@ public class Unit
 
         if (m_Tile != null && foundTile != null)
         {
-            Unit currentUnit = m_Tile.GetUnit();
+            Unit currentUnit = foundTile.GetUnit();
 
             //Do we promote by doing this move?
-            if (this.UnitDefinition.Tier <= currentUnit.UnitDefinition.Tier)
+            if (currentUnit != null &&
+                this.UnitDefinition.Tier <= currentUnit.UnitDefinition.Tier)
             {
                 promote = true;
             }
