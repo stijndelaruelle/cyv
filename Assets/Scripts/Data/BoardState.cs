@@ -386,17 +386,55 @@ public class BoardState
                     //    Debug.Log("");
                     //}
 
+                    #region Promotion
                     if (doWePromote)
                     {
                         //Check all the possible promotion options
+                        List<int> promotableUnitIDs = new List<int>();
+
+                        for (int j = 0; j < nextBoardState.m_Units.Count; ++j)
+                        {
+                            Unit unit = nextBoardState.m_Units[j];
+
+                            if (unit.Owner == m_CurrentPlayer &&
+                                unit.UnitDefinition.Tier == 2)
+                            {
+                                Tile tile = unit.GetTile();
+                                if (tile != null)
+                                {
+                                    promotableUnitIDs.Add(j);
+                                }
+                            }
+                        }
 
                         //For each of them process all the moves
+                        //TEMP FIX TODO: Just pick a random one for now (otherwise another extra layer)
+                        int randID = Random.Range(0, promotableUnitIDs.Count);
+                        Unit promotedUnit = nextBoardState.Units[promotableUnitIDs[randID]];
+
+                        //Find an available upgrade unit
+                        for (int j = 0; j < nextBoardState.m_Units.Count; ++j)
+                        {
+                            Unit unit = nextBoardState.m_Units[j];
+
+                            //Corect type, correct color, and unused!
+                            if (unit.UnitDefinition.UnitType == promotedUnit.UnitDefinition.PromotedType &&
+                                unit.Owner == promotedUnit.Owner &&
+                                unit.GetTile() == null)
+                            {
+                                //We found an available unit!
+                                //Now swap it with the current one
+                                Tile tile = promotedUnit.GetTile();
+                                promotedUnit.SetTile(null);
+                                unit.SetTile(tile);
+                                break;
+                            }
+                        }
                     }
-                    else
-                    {
-                        if (id < boardStates.Count) { nextBoardState.SwapCurrentPlayer(); }
-                        nextBoardState.ProcessAllMoves(boardStates, id);
-                    }
+                    #endregion
+
+                    if (id < boardStates.Count) { nextBoardState.SwapCurrentPlayer(); }
+                    nextBoardState.ProcessAllMoves(boardStates, id);
 
                     //Get the value and make and compare it
                     bool addMove = false;
@@ -480,7 +518,59 @@ public class BoardState
         //Only called by AI!
         m_FromTileID = Units[m_BestMove.unitID].GetTile().ID;
 
-        Units[m_BestMove.unitID].ProcessMove(m_BestMove.moveID);
+        bool doWePromote = Units[m_BestMove.unitID].ProcessMove(m_BestMove.moveID);
+
+        #region Promotion
+
+        PromotionTileID = -1;
+        if (doWePromote)
+        {
+            //Check all the possible promotion options
+            List<int> promotableUnitIDs = new List<int>();
+
+            for (int j = 0; j < m_Units.Count; ++j)
+            {
+                Unit unit = m_Units[j];
+
+                if (unit.Owner == m_CurrentPlayer &&
+                    unit.UnitDefinition.Tier == 2)
+                {
+                    Tile tile = unit.GetTile();
+                    if (tile != null)
+                    {
+                        promotableUnitIDs.Add(j);
+                    }
+                }
+            }
+
+            //For each of them process all the moves
+            //TEMP FIX TODO: Just pick a random one for now (otherwise another extra layer)
+            int randID = Random.Range(0, promotableUnitIDs.Count);
+            Unit promotedUnit = Units[promotableUnitIDs[randID]];
+
+            //Find an available upgrade unit
+            for (int j = 0; j < m_Units.Count; ++j)
+            {
+                Unit unit = m_Units[j];
+
+                //Corect type, correct color, and unused!
+                if (unit.UnitDefinition.UnitType == promotedUnit.UnitDefinition.PromotedType &&
+                    unit.Owner == promotedUnit.Owner &&
+                    unit.GetTile() == null)
+                {
+                    //We found an available unit!
+                    //Now swap it with the current one
+                    Tile tile = promotedUnit.GetTile();
+                    promotedUnit.SetTile(null);
+                    unit.SetTile(tile);
+                    
+                    //Visually show the upgraded tile
+                    PromotionTileID = tile.ID;
+                    break;
+                }
+            }
+        }
+        #endregion
 
         m_ToTileID = Units[m_BestMove.unitID].GetTile().ID;
 

@@ -32,10 +32,21 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
     //Events
     public PlayerColorDelegate OnAllowPromition;
 
+    [SerializeField]
+    private GameObject m_Hex = null; //Only used for the main color of the VisualTile
+
+    [SerializeField]
+    private GameObject m_HexBorder = null; //Used for the border color of the VisualTile
+
+    [SerializeField]
+    private GameObject m_MovementMarker = null; //Used to show the movement
+
+    [SerializeField]
+    private GameObject m_UnitParent = null;
+
     private VisualTile[] m_Neighbours;
     private Color m_OriginalColor = Color.magenta; //so funny
 
-    private bool m_IsHighlightingMovement = false;
     private bool m_IsHighlighted = false;
     private bool m_IsHighlightedPromotion = false;
     public bool IsHighligtedPromotion
@@ -56,6 +67,12 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
     private void Awake()
     {
         m_Neighbours = new VisualTile[BoardState.DIR_NUM];
+
+        if (m_HexBorder != null)
+            m_HexBorder.SetActive(false);
+
+        if (m_MovementMarker != null)
+            m_MovementMarker.SetActive(false);
     }
 
     public void SetID(int id)
@@ -99,47 +116,18 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
         return false;
     }
 
-    public void HighlightMovementHistory(bool enable, bool from)
+    public static void HighlightMovementHistory(bool from)
     {
-        m_IsHighlightingMovement = enable;
-
-        Color color = Color.magenta;
-        if (enable)
+        if (from)
         {
-            if (from)
-            {
-                //There can only be one!
-                if (m_FromTile != null &&
-                    m_FromTile != this &&
-                    m_ToTile != m_FromTile)
-                {
-                    m_FromTile.HighlightMovementHistory(false, from);
-                }
-
-                color = new Color(1.0f, 0.0f, 1.0f, 0.75f);
-                m_FromTile = this;
-            }
-            else
-            {
-                //There can only be one!
-                if (m_ToTile != null &&
-                    m_ToTile != this &&
-                    m_ToTile != m_FromTile)
-                {
-                    m_ToTile.HighlightMovementHistory(false, from);
-                }
-
-                color = new Color(1.0f, 1.0f, 0.0f, 0.75f);
-                m_ToTile = this;
-            }
+            if (m_FromTile != null)
+                m_FromTile.HighlightMovementHistory(true, from);
         }
         else
         {
-            //Don't reset the from & to tiles
-            color = m_OriginalColor;
+            if (m_ToTile != null)
+                m_ToTile.HighlightMovementHistory(true, from);
         }
-
-        SetColor(color);
     }
 
     public static void UnHighlightMovementHistory(bool from)
@@ -156,17 +144,56 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
         }
     }
 
+    public void HighlightMovementHistory(bool enable, bool from)
+    {
+        Color color = Color.magenta;
+        if (enable)
+        {
+            if (from)
+            {
+                //There can only be one!
+                if (m_FromTile != null &&
+                    m_FromTile != this &&
+                    m_ToTile != m_FromTile)
+                {
+                    m_FromTile.HighlightMovementHistory(false, from);
+                }
+
+                color = new Color(1.0f, 0.0f, 1.0f, 1.0f);
+                m_FromTile = this;
+            }
+            else
+            {
+                //There can only be one!
+                if (m_ToTile != null &&
+                    m_ToTile != this &&
+                    m_ToTile != m_FromTile)
+                {
+                    m_ToTile.HighlightMovementHistory(false, from);
+                }
+
+                color = new Color(0.0f, 1.0f, 1.0f, 1.0f);
+                m_ToTile = this;
+            }
+        }
+        else
+        {
+            //Don't reset the from & to tiles
+            color = m_OriginalColor;
+        }
+
+        SetBorderColor(color);
+    }
+
     public void Highlight(bool enable)
     {
         //These are the circles indicating the movement range
         m_IsHighlighted = enable;
 
-        if (m_IsHighlightingMovement)
-            return;
-
-        Color color = new Color(1.0f, 0.0f, 0.0f, 0.75f);
-        if (!enable) { color = m_OriginalColor; }
-        SetColor(color);
+        if (m_MovementMarker != null)
+        {
+            m_MovementMarker.SetActive(enable);
+        }
     }
 
     public void HighlightNeighbour(int dir, bool enable, int movesLeft, bool canJump, bool mustJump, PlayerColor playerColor, bool recursiveCall = false)
@@ -227,9 +254,30 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
         //Highlight this tile for a unit that wishes to promote
         m_IsHighlightedPromotion = enable;
 
-        Color color = new Color(0.0f, 1.0f, 1.0f, 0.75f);
+        Color color = new Color(0.0f, 0.0f, 0.0f, 0.75f);
         if (!enable) { color = m_OriginalColor; }
-        SetColor(color);
+        SetBorderColor(color);
+
+        if (enable)
+        {
+            //Play a particle effect
+        }
+    }
+
+    public void SetBorderColor(Color color)
+    {
+        //Avoid useless overdraw
+        if (m_OriginalColor == color)
+        {
+            m_HexBorder.SetActive(false);
+            return;
+        }
+
+        if (m_HexBorder != null)
+        {
+            m_HexBorder.GetComponent<Image>().color = color;
+            m_HexBorder.SetActive(true);
+        }
     }
 
     public void SetColor(Color color)
@@ -239,7 +287,10 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
             m_OriginalColor = color; 
         }
 
-        gameObject.GetComponent<Image>().color = color;
+        if (m_Hex != null)
+        {
+            m_Hex.GetComponent<Image>().color = color;
+        }
     }
 
     //----------------
@@ -298,10 +349,10 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
                 bool promote = false;
 
                 //If we already have a child (which means we already hold a unit), make that move to the corresponding reserve tile
-                if (GetVisualUnit() != null)
+                VisualUnit currentUnit = GetVisualUnit();
+                if (currentUnit != null)
                 {
-                    VisualUnit currentUnit = transform.GetChild(0).GetComponent<VisualUnit>();
-                    if (currentUnit != null) { currentUnit.SetTile(null); }
+                    currentUnit.SetTile(null);
 
                     //If this unit had an equal or higher rank than the unit that killed it, we allow the player to promote a unit!
                     if (GameplayManager.Instance.GameState == GameState.Game &&
@@ -330,9 +381,20 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
 
     private VisualUnit GetVisualUnit()
     {
-        if (transform.childCount > 0)
-            return transform.GetChild(0).GetComponent<VisualUnit>();
+        if (m_UnitParent == null)
+            return null;
+
+        if (m_UnitParent.transform.childCount > 0)
+            return m_UnitParent.transform.GetChild(0).GetComponent<VisualUnit>();
         else
             return null;
+    }
+
+    public Transform GetUnitParent()
+    {
+        if (m_UnitParent)
+            return m_UnitParent.transform;
+        else
+            return transform;
     }
 }

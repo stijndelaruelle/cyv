@@ -35,7 +35,7 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         //Only enlarge units that we actually can pick up
         if (unit != null && GameplayManager.Instance.CurrentPlayer == m_PlayerColor)
         {
-            transform.localScale = new Vector3(2.0f, 2.0f, 2.0f);
+            transform.localScale = new Vector3(3.0f, 3.0f, 1.0f);
         }
     }
 
@@ -60,7 +60,7 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         if (tile == null) { tile = m_ReserveTile; }
         m_Tile = tile;
 
-        transform.SetParent(tile.gameObject.transform);
+        transform.SetParent(tile.GetUnitParent());
         transform.localScale = new Vector3(1.0f, 1.0f, 1.0f); //For some reason this resets
     }
 
@@ -119,6 +119,17 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         {
             GameplayManager.Instance.HighlightSetupZone(enable);
             return;
+        }
+
+        if (enable)
+        {
+            VisualTile.UnHighlightMovementHistory(true);
+            VisualTile.UnHighlightMovementHistory(false);
+        }
+        else
+        {
+            VisualTile.HighlightMovementHistory(true);
+            VisualTile.HighlightMovementHistory(false);
         }
 
         //Show movement range
