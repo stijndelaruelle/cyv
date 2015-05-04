@@ -57,7 +57,16 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     {
         ShowMovementRange(false);
 
-        if (tile == null) { tile = m_ReserveTile; }
+        if (tile == null)
+        {
+            tile = m_ReserveTile;
+        }
+        else
+        {
+            if (GameplayManager.Instance.GameState == GameState.Game)
+                Show(true);
+        }
+
         m_Tile = tile;
 
         transform.SetParent(tile.GetUnitParent());

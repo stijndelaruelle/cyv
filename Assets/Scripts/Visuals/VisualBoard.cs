@@ -402,7 +402,16 @@ public class VisualBoard : MonoBehaviour
         {
             if (m_VisualUnits[i].GetPlayerColor() == playerColor)
             {
-                m_VisualUnits[i].Show(state);
+                //Don't show tier 3 units, unless on the playing field
+                if (m_VisualUnits[i].GetUnitDefinition().Tier == 3 &&
+                    m_VisualUnits[i].GetTile() == m_VisualUnits[i].GetReserveTile())
+                {
+                    m_VisualUnits[i].Show(false);
+                }
+                else
+                {
+                    m_VisualUnits[i].Show(state);
+                } 
             }
         }
     }
