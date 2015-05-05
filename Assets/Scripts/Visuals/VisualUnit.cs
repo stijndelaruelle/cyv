@@ -92,13 +92,20 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     {
         m_PlayerColor = playerColor;
 
-        Color color = Color.white;
-        if (playerColor == PlayerColor.Black)
-        {
-            color = Color.black;
-        }
+        //Color primColor = Color.white;
+        //Color secColor = Color.black;
+        //if (playerColor == PlayerColor.Black)
+        //{
+        //    primColor = Color.black;
+        //    secColor = Color.white;
+        //}
 
-        gameObject.GetComponent<Image>().color = color;
+        //gameObject.GetComponent<Image>().color = primColor;
+
+        ////if (m_UnitSprite != null)
+        ////{
+        ////    m_UnitSprite.color = secColor;
+        ////}
     }
 
     public PlayerColor GetPlayerColor()

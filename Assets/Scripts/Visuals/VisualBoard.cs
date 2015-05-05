@@ -9,7 +9,10 @@ public class VisualBoard : MonoBehaviour
     private GameObject m_TilePrefab = null;
 
     [SerializeField]
-    private GameObject[] m_UnitPrefab = null;
+    private GameObject[] m_WhiteUnitPrefab = null;
+
+    [SerializeField]
+    private GameObject[] m_BlackUnitPrefab = null;
 
     //The reserve tiles (where dead / unused units go)
     [SerializeField]
@@ -265,10 +268,18 @@ public class VisualBoard : MonoBehaviour
 
                 for (int unitID = 0; unitID < unitDefinition.StartAmount; ++unitID)
                 {
-                    GameObject obj = GameObject.Instantiate(m_UnitPrefab[(int)unitDefinition.UnitType]) as GameObject;
+                    GameObject obj = null;
 
                     PlayerColor playerColor = PlayerColor.White;
-                    if (playerID == 1) playerColor = PlayerColor.Black;
+                    if (playerID == 1)
+                    {
+                        playerColor = PlayerColor.Black;
+                        obj = GameObject.Instantiate(m_BlackUnitPrefab[(int)unitDefinition.UnitType]) as GameObject;
+                    }
+                    else
+                    {
+                        obj = GameObject.Instantiate(m_WhiteUnitPrefab[(int)unitDefinition.UnitType]) as GameObject;
+                    }
 
                     VisualUnit visualUnit = obj.GetComponent<VisualUnit>();
                     visualUnit.SetPlayerColor(playerColor);
