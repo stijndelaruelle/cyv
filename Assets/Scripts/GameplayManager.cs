@@ -231,13 +231,15 @@ public class GameplayManager : MonoBehaviour
         //If a king is dead, the game is done!
         if (m_GameState == GameState.Game)
         {
-            if (m_BoardStates[m_CurrentBoardStateID].IsKingDead(PlayerColor.White))
+            if (m_BoardStates[m_CurrentBoardStateID].IsKingDead(PlayerColor.White) ||
+                m_BoardStates[m_CurrentBoardStateID].HasOnlyKing(PlayerColor.White))
             {
                 Debug.Log("Black won!");
                 SetGameState(GameState.EndGame);
             }
 
-            if (m_BoardStates[m_CurrentBoardStateID].IsKingDead(PlayerColor.Black))
+            if (m_BoardStates[m_CurrentBoardStateID].IsKingDead(PlayerColor.Black) ||
+                m_BoardStates[m_CurrentBoardStateID].HasOnlyKing(PlayerColor.Black))
             {
                 Debug.Log("White won!");
                 SetGameState(GameState.EndGame);
@@ -311,7 +313,7 @@ public class GameplayManager : MonoBehaviour
 
         //Calculate all the moves
         DateTime time = DateTime.Now;
-        currentBoardState.ProcessAllMoves(m_AIBoardStates);
+        currentBoardState.ProcessAllMoves(m_AIBoardStates, int.MinValue, int.MaxValue, 0);
         DateTime time2 = DateTime.Now;
 
         double ms = (time2 - time).TotalMilliseconds;
@@ -377,8 +379,17 @@ public class GameplayManager : MonoBehaviour
                     //If 1 player was a computer, show win/lose
                     PlayerColor winner = PlayerColor.White;
 
-                    if (m_VisualBoard.CurrentBoardState.IsKingDead(PlayerColor.White)) { winner = PlayerColor.Black; }
-                    if (m_VisualBoard.CurrentBoardState.IsKingDead(PlayerColor.Black)) { winner = PlayerColor.White; }
+                    if (m_VisualBoard.CurrentBoardState.IsKingDead(PlayerColor.White) ||
+                        m_VisualBoard.CurrentBoardState.HasOnlyKing(PlayerColor.White))
+                    {
+                        winner = PlayerColor.Black;
+                    }
+
+                    if (m_VisualBoard.CurrentBoardState.IsKingDead(PlayerColor.Black) ||
+                        m_VisualBoard.CurrentBoardState.HasOnlyKing(PlayerColor.Black))
+                    {
+                        winner = PlayerColor.White;
+                    }
 
                     if (IsAIPlaying())
                     {

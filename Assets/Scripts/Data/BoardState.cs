@@ -58,9 +58,6 @@ public class BoardState
 
     private Move m_BestMove = new Move();
 
-    private int m_Alpha = 0;
-    private int m_Beta = 0;
-
     //The last used tiles, for highlighting purposes
     private int m_FromTileID = -1;
     private int m_ToTileID = -1;
@@ -303,7 +300,7 @@ public class BoardState
                 //Losing the king gives such a huge failure, it's impossible to ignore
                 else if (unit.UnitDefinition.UnitType == UnitType.King && unit.GetTile() == null)
                 {
-                    value -= 99999;
+                    value -= 99999999;
                 }
             }
             
@@ -318,7 +315,7 @@ public class BoardState
                 //Points are bigger than losing your own king, as that simply doesn't matter anymore
                 else if (unit.UnitDefinition.UnitType == UnitType.King && unit.GetTile() == null)
                 {
-                    value += 99999999;
+                    value += 99999;
                 }
             }
         }
@@ -348,11 +345,11 @@ public class BoardState
         }
     }
 
-    public void ProcessAllMoves(List<BoardState> boardStates, int id = 0)
+    public void ProcessAllMoves(List<BoardState> boardStates, int alpha, int beta, int id = 0)
     {
         if (id < boardStates.Count)
         {
-            //Reset the value to an insane value (the opposite of what we prefer)
+            //Reset the value to the worst case scenario
             m_Value = int.MaxValue;
             if (m_CurrentPlayer == PlayerColor.Black) { m_Value *= -1; }
 
@@ -366,6 +363,30 @@ public class BoardState
             //Go trough all the units
             for (int i = 0; i < m_Units.Count; ++i)
             {
+                #region alpha-beta pruning
+                //Alpha beta pruning
+                if (m_CurrentPlayer == PlayerColor.Black)
+                {
+                    //Our worst case scenario value is higher than the minimizer value above us.
+                    //The minimizer will never accept any of our values, so we can quit right here.
+                    if (m_Value > beta)
+                    {
+                        //Debug.Log("Pruned!");
+                        break;
+                    }
+                }
+                else
+                {
+                    //Our worst case scenario value is lower than the maximizer value above us.
+                    //The maximizer will never accept any of our values, so we can quit right here.
+                    if (m_Value < alpha)
+                    {
+                        //Debug.Log("Pruned!");
+                        break;
+                    }
+                }
+                #endregion
+
                 if (m_Units[i].Owner != m_CurrentPlayer)
                     continue;
 
@@ -378,6 +399,30 @@ public class BoardState
 
                 for (int moveid = 0; moveid < totalMoves; ++moveid)
                 {
+                    #region alpha-beta pruning
+                    //Alpha beta pruning
+                    if (m_CurrentPlayer == PlayerColor.Black) //Max
+                    {
+                        //Our worst case scenario value is higher than the minimizer value above us.
+                        //The minimizer will never accept any of our values, so we can quit right here.
+                        if (m_Value > beta)
+                        {
+                            //Debug.Log("Pruned!");
+                            break;
+                        }
+                    }
+                    else //Min
+                    {
+                        //Our worst case scenario value is lower than the maximizer value above us.
+                        //The maximizer will never accept any of our values, so we can quit right here.
+                        if (m_Value < alpha)
+                        {
+                            //Debug.Log("Pruned!");
+                            break;
+                        }
+                    }
+                    #endregion
+
                     nextBoardState.CopyBoard(this);
                     bool doWePromote = nextBoardState.Units[i].ProcessMove(moveid);
 
@@ -437,7 +482,7 @@ public class BoardState
                     #endregion
 
                     if (id < boardStates.Count) { nextBoardState.SwapCurrentPlayer(); }
-                    nextBoardState.ProcessAllMoves(boardStates, id);
+                    nextBoardState.ProcessAllMoves(boardStates, alpha, beta, id);
 
                     //Get the value and make and compare it
                     bool addMove = false;
@@ -472,6 +517,16 @@ public class BoardState
 
                         m_Value = nextBoardState.Value;
                         goodMoves.Add(new Move(i, moveid, nextBoardState.Value, movesTillValue));
+
+                        //Set the alpha & beta
+                        if (m_CurrentPlayer == PlayerColor.Black)
+                        {
+                            alpha = m_Value;
+                        }
+                        else
+                        {
+                            beta = m_Value;
+                        }
                     }
                 }
             }
@@ -522,6 +577,8 @@ public class BoardState
         m_FromTileID = Units[m_BestMove.unitID].GetTile().ID;
 
         bool doWePromote = Units[m_BestMove.unitID].ProcessMove(m_BestMove.moveID);
+
+        m_ToTileID = Units[m_BestMove.unitID].GetTile().ID;
 
         #region Promotion
 
@@ -578,8 +635,6 @@ public class BoardState
         }
         #endregion
 
-        m_ToTileID = Units[m_BestMove.unitID].GetTile().ID;
-
         //If a promotion happened set the tile here
         //m_PromotionTileID
     }
@@ -625,5 +680,21 @@ public class BoardState
         }
 
         return false;
+    }
+
+    public bool HasOnlyKing(PlayerColor playerColor)
+    {
+        foreach (Unit unit in m_Units)
+        {
+            //Check if any other character are alive
+            if (unit.Owner == playerColor &&
+                unit.UnitDefinition.UnitType != UnitType.King &&
+                unit.GetTile() != null)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
