@@ -559,33 +559,72 @@ public class BoardState
             //    Debug.Log("");
             //}
 
+            #region Best Move Decision
             //Now we have all the good moves, determine our favourite
+            List<Move> bestMoves = new List<Move>();
             if (goodMoves.Count > 0)
             {
                 m_BestMove = goodMoves[0];
                 for (int i = 0; i < goodMoves.Count; ++i)
                 {
-                    bool changeBestMove = false;
+                    bool addBestMove = false;
                     if (m_CurrentPlayer == PlayerColor.White && m_BestMove.value >= goodMoves[i].value) //min
                     {
-                        changeBestMove = true;
+                        addBestMove = true;
                     }
 
                     if (m_CurrentPlayer == PlayerColor.Black && m_BestMove.value <= goodMoves[i].value) //max
                     {
-                        changeBestMove = true;
+                        addBestMove = true;
                     }
 
-                    if (changeBestMove)
+                    if (addBestMove)
                     {
                         //Which is currently just the one that took the least time
                         if (goodMoves[i].movesTillValue < m_BestMove.movesTillValue)
                         {
-                            m_BestMove = goodMoves[i];
+                            bestMoves.Clear();
                         }
+
+                        bestMoves.Add(goodMoves[i]);
                     }
                 }
             }
+
+            //Now we have the absolute best moves
+            if (bestMoves.Count > 0)
+            {
+                //Take whatever we have
+                if (bestMoves.Count == 1)  { m_BestMove = bestMoves[0]; }
+                else
+                {
+                    List<Move> randomMovePool = new List<Move>();
+                    bool mustMoveKing = true;
+                    for (int i = 0; i < bestMoves.Count; ++i)
+                    {
+                        if (m_Units[bestMoves[i].unitID].UnitDefinition.UnitType != UnitType.King)
+                        {
+                            randomMovePool.Add(bestMoves[i]);
+                            mustMoveKing = false;
+                        }
+                    }
+
+                    //Randomise
+                    if (!mustMoveKing)
+                    {
+                        //Only choose between non king units
+                        int randID = Random.Range(0, randomMovePool.Count);
+                        m_BestMove = randomMovePool[randID];
+                    }
+                    else
+                    {
+                        //The king is required so let's go
+                        int randID = Random.Range(0, bestMoves.Count);
+                        m_BestMove = bestMoves[randID];
+                    }
+                }
+            }
+            #endregion
         }
         else
         {
