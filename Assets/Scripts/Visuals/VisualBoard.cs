@@ -366,6 +366,10 @@ public class VisualBoard : MonoBehaviour
             {
                 int tileID = unit.GetTile().ID;
                 VisualTile newVisualTile = m_VisualTiles[tileID];
+
+                if (tileID == m_VisualUnits[i].GetTile().ID)
+                    continue;
+
                 m_VisualUnits[i].SetTile(newVisualTile);
 
                 Tile currentTile = null;

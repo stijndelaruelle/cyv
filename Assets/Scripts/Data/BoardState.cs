@@ -291,10 +291,16 @@ public class BoardState
                     value += unit.UnitDefinition.Value;
 
                     //Aggressive AI, prefer our own units less than theirs
-                    //value -= unit.UnitDefinition.Value + 1;
+                    if (GameplayManager.Instance.AIType == AIType.Aggressive)
+                    {
+                        value -= 1;
+                    }
 
                     //Defensive AI, prefer our own units more than theirs
-                    //value += 1;
+                    if (GameplayManager.Instance.AIType == AIType.Defensive)
+                    {
+                        value += 1;
+                    }
                 }
 
                 //Losing the king gives such a huge failure, it's impossible to ignore
@@ -327,6 +333,23 @@ public class BoardState
         }
 
         return value;
+    }
+
+    public void LoadBoard(BoardStateSaveData saveData)
+    {
+        for (int i = 0; i < m_Units.Count; ++i)
+        {
+            int tileID = saveData.GetUnitTile(i);
+            
+            Tile tile = null;
+            if (tileID >= 0) { tile = m_Tiles[tileID]; }
+
+            //-2 means not setup, used for AI formations
+            if (tileID != -2)
+            {
+                m_Units[i].SetTile(tile);
+            }
+        }
     }
 
     public void CopyBoard(BoardState otherState)
@@ -689,6 +712,7 @@ public class BoardState
             //Check if any other character are alive
             if (unit.Owner == playerColor &&
                 unit.UnitDefinition.UnitType != UnitType.King &&
+                unit.UnitDefinition.UnitType != UnitType.Mountain &&
                 unit.GetTile() != null)
             {
                 return false;

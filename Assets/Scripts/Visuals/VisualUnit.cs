@@ -55,8 +55,6 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
 
     public void SetTile(VisualTile tile)
     {
-        ShowMovementRange(false);
-
         if (tile == null)
         {
             tile = m_ReserveTile;
@@ -65,6 +63,8 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         {
             if (GameplayManager.Instance.GameState == GameState.Game)
                 Show(true);
+
+            ShowMovementRange(false);
         }
 
         m_Tile = tile;

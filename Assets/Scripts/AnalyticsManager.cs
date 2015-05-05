@@ -26,67 +26,89 @@ public class AnalyticsManager : MonoBehaviour
     //Functions
     public void Start()
     {
-        // Start a new session.
-        m_GoogleAnalytics.StartSession();
+        #if UNITY_ANDROID
+            // Start a new session.
+            m_GoogleAnalytics.StartSession();
+        #endif
     }
 
     public void OnDestroy()
     {
-        m_GoogleAnalytics.StopSession();
+        #if UNITY_ANDROID
+            m_GoogleAnalytics.StopSession();
+        #endif
     }
 
     public void LogScreen(string screenName)
     {
-        //Example LogScreen("Main Menu");
-        m_GoogleAnalytics.LogScreen(screenName);
+        #if UNITY_ANDROID
+            //Example LogScreen("Main Menu");
+            m_GoogleAnalytics.LogScreen(screenName);
+        #endif
     }
 
     public void LogEvent(string eventCategory, string eventAction, string eventLabel, long value)
     {
-        //Example: LogEvent("Achievement", "Unlocked", "Slay 10 dragons", 5);
-        m_GoogleAnalytics.LogEvent(eventCategory, eventAction, eventLabel, value);
+        #if UNITY_ANDROID
+            //Example: LogEvent("Achievement", "Unlocked", "Slay 10 dragons", 5);
+            m_GoogleAnalytics.LogEvent(eventCategory, eventAction, eventLabel, value);
+        #endif
     }
 
     public void LogException(string exceptionDescription, bool isFatal)
     {
-        //Example: LogException("Incorrect input exception", true);
-        m_GoogleAnalytics.LogException(exceptionDescription, isFatal);
+        #if UNITY_ANDROID
+            //Example: LogException("Incorrect input exception", true);
+            m_GoogleAnalytics.LogException(exceptionDescription, isFatal);
+        #endif
     }
 
     public void LogTiming(string timingCategory, long timingInterval, string timingName, string timingLabel)
     {
-        //Example: LogTiming("Loading", 50L, "Main Menu", "First Load");
-        m_GoogleAnalytics.LogTiming(timingCategory, timingInterval, timingName, timingLabel);
+        #if UNITY_ANDROID
+            //Example: LogTiming("Loading", 50L, "Main Menu", "First Load");
+            m_GoogleAnalytics.LogTiming(timingCategory, timingInterval, timingName, timingLabel);
+        #endif
     }
 
     public void LogSocial(string socialNetwork, string socialAction, string socialTarget)
     {
-        //Example: LogSocial("twitter", "retweet", "twitter.com/googleanalytics/status/482210840234295296");
-        m_GoogleAnalytics.LogSocial(socialNetwork, socialAction, socialTarget);
+        #if UNITY_ANDROID
+            //Example: LogSocial("twitter", "retweet", "twitter.com/googleanalytics/status/482210840234295296");
+            m_GoogleAnalytics.LogSocial(socialNetwork, socialAction, socialTarget);
+        #endif
     }
 
     public void LogTransaction(string transID, string affiliation, double revenue, double tax, double shipping)
     {
-        //Example: LogTransaction("TRANS001", "Coin Store", 3.0, 0.0, 0.0);
-        m_GoogleAnalytics.LogTransaction(transID, affiliation, revenue, tax, shipping);
+        #if UNITY_ANDROID
+            //Example: LogTransaction("TRANS001", "Coin Store", 3.0, 0.0, 0.0);
+            m_GoogleAnalytics.LogTransaction(transID, affiliation, revenue, tax, shipping);
+        #endif
     }
 
     public void LogTransaction(string transID, string affiliation, double revenue, double tax, double shipping, string currencyCode)
     {
-        //Example: LogTransaction("TRANS001", "Coin Store", 3.0, 0.0, 0.0, "USD");
-        m_GoogleAnalytics.LogTransaction(transID, affiliation, revenue, tax, shipping, currencyCode);
+        #if UNITY_ANDROID
+            //Example: LogTransaction("TRANS001", "Coin Store", 3.0, 0.0, 0.0, "USD");
+            m_GoogleAnalytics.LogTransaction(transID, affiliation, revenue, tax, shipping, currencyCode);
+        #endif
     }
 
     public void LogItem(string transID, string name, string SKU, string category, double price, long quantity)
     {
-        //Example: LogItem("TRANS001", "Sword", "SWORD1223", "Weapon", 3.0, 2);
-        m_GoogleAnalytics.LogItem(transID, name, SKU, category, price, quantity);
+        #if UNITY_ANDROID
+            //Example: LogItem("TRANS001", "Sword", "SWORD1223", "Weapon", 3.0, 2);
+            m_GoogleAnalytics.LogItem(transID, name, SKU, category, price, quantity);
+        #endif
     }
 
     public void LogItem(string transID, string name, string SKU, string category, double price, long quantity, string currencyCode)
     {
-        //Example: LogItem("TRANS001", "Sword", "SWORD1223", "Weapon", 3.0, 2, "USD");
-        m_GoogleAnalytics.LogItem(transID, name, SKU, category, price, quantity, currencyCode);
+        #if UNITY_ANDROID
+            //Example: LogItem("TRANS001", "Sword", "SWORD1223", "Weapon", 3.0, 2, "USD");
+            m_GoogleAnalytics.LogItem(transID, name, SKU, category, price, quantity, currencyCode);
+        #endif
     }
 
     //Other stuff: Custom Dimensions & Metrics / Campaigns

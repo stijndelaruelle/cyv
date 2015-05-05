@@ -18,16 +18,31 @@ public enum PlayerType
     AI
 }
 
+public enum AIType
+{
+    Standard,
+    Aggressive,
+    Defensive
+}
+
 public enum GameMode
 {
     PassAndPlay, //Board flips turns after every move (unless AI is involved)
-    TabletPlay   //Black units are flipped at the beginning of the game
+    MirroredPlay   //Black units are flipped at the beginning of the game
 }
 
 //Delegates
 public delegate void VoidDelegate();
 public delegate void PlayerColorDelegate(PlayerColor playerColor);
 public delegate void VisualUnitDelegate(VisualUnit visualUnit);
+
+public class NewGameSetup
+{
+    public PlayerType m_WhitePlayerType;
+    public PlayerType m_BlackPlayerType;
+    public int m_AIDifficulty;
+    public AIType m_AIType;
+}
 
 public class GameplayManager : MonoBehaviour
 {
@@ -66,8 +81,20 @@ public class GameplayManager : MonoBehaviour
     }
 
     private GameMode m_GameMode = GameMode.PassAndPlay;
+    private AIType m_AIType = AIType.Standard;
+    public AIType AIType
+    {
+        get { return m_AIType; }
+    }
 
     private bool m_AlreadyFinishedGame = false;
+
+    //Setting up new game
+    private NewGameSetup m_NewGameSetup;
+    public NewGameSetup NewGameSetup
+    {
+        get { return m_NewGameSetup;  }
+    }
 
     //Singleton
     private static GameplayManager m_Instance;
@@ -97,15 +124,22 @@ public class GameplayManager : MonoBehaviour
 
             m_AIBoardStates.Add(boardState);
         }
+
+        m_NewGameSetup = new NewGameSetup();
     }
 
     public void Start()
     {
         //Not is Awake as they should not depend on eachother there yet
-        NewGame(PlayerType.Human, PlayerType.Human, GameMode.TabletPlay);
+        NewGame(PlayerType.Human, PlayerType.Human, GameMode.MirroredPlay, 1, AIType.Standard);
     }
 
-    public void NewGame(PlayerType playerType1, PlayerType playerType2, GameMode gameMode)
+    public void NewGame()
+    {
+        NewGame(m_NewGameSetup.m_WhitePlayerType, m_NewGameSetup.m_BlackPlayerType, GameMode.PassAndPlay, m_NewGameSetup.m_AIDifficulty, m_NewGameSetup.m_AIType);
+    }
+
+    public void NewGame(PlayerType playerType1, PlayerType playerType2, GameMode gameMode, int difficulty, AIType AIType)
     {
         //Set the playertypes
         m_PlayerTypes[0] = playerType1;
@@ -141,6 +175,32 @@ public class GameplayManager : MonoBehaviour
         //Set the gamemode (pass & play or tablet)
         SetGameMode(gameMode);
 
+        //Set AI depth
+        m_AIMoveDepth = difficulty + 2;
+
+        //We have too many board states
+        if (m_AIMoveDepth < m_AIBoardStates.Count)
+        {
+            int count = m_AIBoardStates.Count - m_AIMoveDepth;
+            m_AIBoardStates.RemoveRange(m_AIMoveDepth, count);
+        }
+
+        //We have too few boardstates
+        if (m_AIMoveDepth > m_AIBoardStates.Count)
+        {
+            int count = m_AIMoveDepth - m_AIBoardStates.Count;
+            for (int i = 0; i < count; ++i)
+            {
+                BoardState newBoardState = new BoardState();
+                newBoardState.GenerateDefaultState(BoardState.BOARD_SIZE);
+
+                m_AIBoardStates.Add(newBoardState);
+            }
+        }
+
+        //Set the AI Type
+        m_AIType = AIType;
+
         SaveBoardState();
 
         //Analytics
@@ -156,6 +216,12 @@ public class GameplayManager : MonoBehaviour
         if (m_PlayerTypes[0] == PlayerType.AI && m_PlayerTypes[1] == PlayerType.AI)       { value = 3; }
 
         AnalyticsManager.Instance.LogEvent("Default", "New Game", "Started a new game.", value);
+
+        //If the AI has the first move, let him do so!
+        if (m_PlayerTypes[0] == PlayerType.AI)
+        {
+            AIMove();
+        }
     }
 
     public void HighlightSetupZone(bool enable)
@@ -211,8 +277,7 @@ public class GameplayManager : MonoBehaviour
             return;
 
         //If the new player is an AI, let him think!
-        if (m_PlayerTypes[(int)m_CurrentPlayer] == PlayerType.AI &&
-            m_GameState == GameState.Game)
+        if (m_PlayerTypes[(int)m_CurrentPlayer] == PlayerType.AI)
         {
             AIMove();
         }
@@ -285,7 +350,7 @@ public class GameplayManager : MonoBehaviour
         }
 
         //Flip the board if required
-        if (m_GameMode == GameMode.PassAndPlay && !IsAIPlaying())
+        if (m_GameMode == GameMode.PassAndPlay && NumAIPlayers() == 0)
         {
             bool flip = (CurrentPlayer == PlayerColor.Black);
             m_VisualBoard.FlipBoard(flip);
@@ -296,7 +361,91 @@ public class GameplayManager : MonoBehaviour
 
     public void AIMove()
     {
-        StartCoroutine(AIMoveRoutine());
+        if (m_GameState == GameState.Game)
+        {
+            StartCoroutine(AIMoveRoutine());
+        }
+        else
+        {
+            //Do the setup phase for the AI
+
+            //Set player id
+            BoardState currentBoardState = m_VisualBoard.CurrentBoardState;
+            currentBoardState.SetCurrentPlayer(m_CurrentPlayer);
+
+            //Load some test data
+            if (m_CurrentPlayer == PlayerColor.White)
+            {
+                switch (m_AIType)
+                {
+                    case AIType.Standard:
+                    {
+                        BoardStateSaveDataWhiteSymmetric saveData = new BoardStateSaveDataWhiteSymmetric();
+                        currentBoardState.LoadBoard(saveData);
+                        break;
+                    }
+
+                    case AIType.Aggressive:
+                    {
+                        BoardStateSaveDataWhiteAggressive saveData = new BoardStateSaveDataWhiteAggressive();
+                        currentBoardState.LoadBoard(saveData);
+                        break;
+                    }
+
+                    case AIType.Defensive:
+                    {
+                        BoardStateSaveDataWhiteDefensive saveData = new BoardStateSaveDataWhiteDefensive();
+                        currentBoardState.LoadBoard(saveData);
+                        break;
+                    }
+
+                    default:
+                    {
+                        BoardStateSaveDataWhiteSymmetric saveData = new BoardStateSaveDataWhiteSymmetric();
+                        currentBoardState.LoadBoard(saveData);
+                        break;
+                    }
+                }
+
+            }
+            else
+            {
+                switch (m_AIType)
+                {
+                    case AIType.Standard:
+                        {
+                            BoardStateSaveDataBlackSymmetric saveData = new BoardStateSaveDataBlackSymmetric();
+                            currentBoardState.LoadBoard(saveData);
+                            break;
+                        }
+
+                    case AIType.Aggressive:
+                        {
+                            BoardStateSaveDataBlackAggressive saveData = new BoardStateSaveDataBlackAggressive();
+                            currentBoardState.LoadBoard(saveData);
+                            break;
+                        }
+
+                    case AIType.Defensive:
+                        {
+                            BoardStateSaveDataBlackDefensive saveData = new BoardStateSaveDataBlackDefensive();
+                            currentBoardState.LoadBoard(saveData);
+                            break;
+                        }
+
+                    default:
+                        {
+                            BoardStateSaveDataBlackSymmetric saveData = new BoardStateSaveDataBlackSymmetric();
+                            currentBoardState.LoadBoard(saveData);
+                            break;
+                        }
+                }
+            }
+
+            //Show visually & Done!
+            m_VisualBoard.LoadBoardState(m_VisualBoard.CurrentBoardState);
+            SubmitMove();
+        }
     }
 
     private IEnumerator AIMoveRoutine()
@@ -391,7 +540,7 @@ public class GameplayManager : MonoBehaviour
                         winner = PlayerColor.White;
                     }
 
-                    if (IsAIPlaying())
+                    if (NumAIPlayers() == 1)
                     {
                         if (m_PlayerTypes[(int)winner] == PlayerType.Human) { text = "You win!"; }
                         else                                                { text = "You lose!"; }
@@ -427,10 +576,13 @@ public class GameplayManager : MonoBehaviour
 
     public void SetGameMode(GameMode gameMode)
     {
+        if (m_GameMode == gameMode)
+            return;
+
         m_GameMode = gameMode;
 
         //Pass & play is handled at every swap turns
-        bool flip = (m_GameMode == GameMode.TabletPlay);
+        bool flip = (m_GameMode == GameMode.MirroredPlay);
         m_VisualBoard.FlipUnits(PlayerColor.Black, flip);
     }
 
@@ -440,17 +592,18 @@ public class GameplayManager : MonoBehaviour
         return PlayerColor.White;
     }
 
-    public bool IsAIPlaying()
+    public int NumAIPlayers()
     {
+        int numAIPlayers = 0;
         for (int i = 0; i < m_PlayerTypes.Length; ++i)
         {
             if (m_PlayerTypes[i] == PlayerType.AI)
             {
-                return true;
+                ++numAIPlayers;
             }
         }
 
-        return false;
+        return numAIPlayers;
     }
 
 }
