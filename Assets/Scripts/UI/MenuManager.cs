@@ -50,6 +50,11 @@ public class MenuManager : MonoBehaviour
     //--------------
     // Functions
     //--------------
+    public void Awake()
+    {
+        ShowMainMenu();
+    }
+
     public void ShowMainMenu()
     {
         if (m_MainMenuPanel == null)
