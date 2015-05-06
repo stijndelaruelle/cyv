@@ -323,6 +323,10 @@ public class GameplayManager : MonoBehaviour
         SwapTurns();
         LoadBoardState();
 
+        //Cheap fix, otherwise after promoting & undoing we get promoted units in the bank.
+        m_VisualBoard.ShowUnits(PlayerColor.White, true);
+        m_VisualBoard.ShowUnits(PlayerColor.Black, true);
+
         //If the game was done, now it's not anymore!
         if (m_GameState == GameState.EndGame)
             SetGameState(GameState.Game);

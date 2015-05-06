@@ -365,6 +365,16 @@ public class VisualBoard : MonoBehaviour
             Unit unit = boardState.Units[i];
             if (unit.GetTile() == null)
             {
+                //This unit died
+                if (m_VisualUnits[i].GetTile() != m_VisualUnits[i].GetReserveTile())
+                {
+                    //Nope it didn't, it just promoted!
+                    if (m_VisualUnits[i].GetTile().ID == boardState.PromotionTileID)
+                    {
+                        m_VisualUnits[i].Show(false);
+                    }
+                }
+
                 m_VisualUnits[i].SetTile(null);
                 CurrentBoardState.Units[i].SetTile(null);
             }
@@ -377,6 +387,7 @@ public class VisualBoard : MonoBehaviour
                     continue;
 
                 m_VisualUnits[i].SetTile(newVisualTile);
+                m_VisualUnits[i].Show(true);
 
                 Tile currentTile = null;
                 if (tileID != -1) { currentTile = CurrentBoardState.Tiles[tileID]; }
@@ -581,7 +592,7 @@ public class VisualBoard : MonoBehaviour
 
                 newUnit.SetTile(visualTile);
                 newUnit.Show(true);
-                return;
+                break;
             }
         }
 
