@@ -353,6 +353,12 @@ public class VisualBoard : MonoBehaviour
 
     public void LoadBoardState(BoardState boardState)
     {
+        //Clear all the tile colors (LAME but so we don't leave colored stuff)
+        for (int i = 0; i < m_VisualTiles.Count; ++i)
+        {
+            m_VisualTiles[i].Reset();
+        }
+
         //Place all the units
         for (int i = 0; i < boardState.Units.Count; ++i)
         {
@@ -571,7 +577,11 @@ public class VisualBoard : MonoBehaviour
                 //Now swap it with the current one
                 VisualTile visualTile = visualUnit.GetTile();
                 visualUnit.SetTile(null);
+                visualUnit.Show(false);
+
                 newUnit.SetTile(visualTile);
+                newUnit.Show(true);
+                return;
             }
         }
 

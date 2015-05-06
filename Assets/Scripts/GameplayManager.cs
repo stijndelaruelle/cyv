@@ -84,7 +84,7 @@ public class GameplayManager : MonoBehaviour
         get { return m_GameState; }
     }
 
-    private GameMode m_GameMode = GameMode.PassAndPlay;
+    private GameMode m_GameMode = GameMode.MirroredPlay;
     private AIType m_AIType = AIType.Standard;
     public AIType AIType
     {
@@ -135,6 +135,7 @@ public class GameplayManager : MonoBehaviour
     public void NewGame()
     {
         NewGame(m_NewGameSetup.m_WhitePlayerType, m_NewGameSetup.m_BlackPlayerType, m_NewGameSetup.m_AIDifficulty, m_NewGameSetup.m_AIType);
+        SetGameMode(m_GameMode);
     }
 
     public void NewGame(PlayerType playerType1, PlayerType playerType2, int difficulty, AIType AIType)
@@ -315,6 +316,9 @@ public class GameplayManager : MonoBehaviour
         //2 is a dirty fix, disallow undoing into setup phase
         if (m_CurrentBoardStateID <= 2) return;
 
+        //Another dirty fix
+        if (m_GameState == GameState.Promotion) return;
+
         m_CurrentBoardStateID -= 1;
         SwapTurns();
         LoadBoardState();
@@ -327,6 +331,7 @@ public class GameplayManager : MonoBehaviour
     public void RedoMove()
     {
         if (m_CurrentBoardStateID >= (m_BoardStates.Count - 1)) return;
+        if (m_GameState == GameState.Promotion) return;
 
         m_CurrentBoardStateID += 1;
         SwapTurns();
@@ -570,9 +575,6 @@ public class GameplayManager : MonoBehaviour
 
     public void SetGameMode(GameMode gameMode)
     {
-        if (m_GameMode == gameMode)
-            return;
-
         m_GameMode = gameMode;
 
         //Pass & play is handled at every swap turns

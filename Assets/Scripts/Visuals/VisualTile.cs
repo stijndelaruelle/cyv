@@ -293,6 +293,12 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
         }
     }
 
+    public void Reset()
+    {
+        HighlightPromotion(false);
+        Highlight(false);
+    }
+
     //----------------
     // INTERFACES
     //----------------

@@ -61,9 +61,6 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         }
         else
         {
-            if (GameplayManager.Instance.GameState == GameState.Game)
-                Show(true);
-
             ShowMovementRange(false);
         }
 
