@@ -760,4 +760,20 @@ public class BoardState
 
         return true;
     }
+
+    public bool PlacedAllUnits(PlayerColor playerColor)
+    {
+        foreach (Unit unit in m_Units)
+        {
+            if (unit.Owner == playerColor)
+            {
+                if (unit.GetTile() == null)
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
 }

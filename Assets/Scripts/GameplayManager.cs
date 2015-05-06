@@ -35,6 +35,7 @@ public enum GameMode
 public delegate void VoidDelegate();
 public delegate void PlayerColorDelegate(PlayerColor playerColor);
 public delegate void VisualUnitDelegate(VisualUnit visualUnit);
+public delegate void GameStateDelegate(GameState newGameState, GameState previousGameState);
 
 public class NewGameSetup
 {
@@ -47,6 +48,12 @@ public class NewGameSetup
 public class GameplayManager : MonoBehaviour
 {
     //------------------
+    // Events
+    //------------------
+    public VoidDelegate OnNewGame;
+    public GameStateDelegate OnChangeGameState;
+
+    //------------------
     // Datamembers
     //------------------
     [SerializeField]
@@ -54,9 +61,6 @@ public class GameplayManager : MonoBehaviour
 
     [SerializeField]
     private int m_AIMoveDepth = 3;
-
-    [SerializeField]
-    private GameObject m_ConfirmFormationButton = null; //Only used to confirm a formation, we use the refernce to enable/disable that button
 
     [SerializeField]
     private Text m_EndGameText = null; //The text displayed when the game ends
@@ -128,19 +132,16 @@ public class GameplayManager : MonoBehaviour
         m_NewGameSetup = new NewGameSetup();
     }
 
-    public void Start()
-    {
-        //Not is Awake as they should not depend on eachother there yet
-        NewGame(PlayerType.Human, PlayerType.Human, GameMode.MirroredPlay, 1, AIType.Standard);
-    }
-
     public void NewGame()
     {
-        NewGame(m_NewGameSetup.m_WhitePlayerType, m_NewGameSetup.m_BlackPlayerType, GameMode.PassAndPlay, m_NewGameSetup.m_AIDifficulty, m_NewGameSetup.m_AIType);
+        NewGame(m_NewGameSetup.m_WhitePlayerType, m_NewGameSetup.m_BlackPlayerType, m_NewGameSetup.m_AIDifficulty, m_NewGameSetup.m_AIType);
     }
 
-    public void NewGame(PlayerType playerType1, PlayerType playerType2, GameMode gameMode, int difficulty, AIType AIType)
+    public void NewGame(PlayerType playerType1, PlayerType playerType2, int difficulty, AIType AIType)
     {
+        if (OnNewGame != null)
+            OnNewGame();
+
         //Set the playertypes
         m_PlayerTypes[0] = playerType1;
         m_PlayerTypes[1] = playerType2;
@@ -171,9 +172,6 @@ public class GameplayManager : MonoBehaviour
         {
             m_VisualBoard.FlipBoard(false);
         }
-
-        //Set the gamemode (pass & play or tablet)
-        SetGameMode(gameMode);
 
         //Set AI depth
         m_AIMoveDepth = difficulty + 2;
@@ -483,17 +481,15 @@ public class GameplayManager : MonoBehaviour
 
     public void SetGameState(GameState gameState)
     {
+        if (OnChangeGameState != null)
+            OnChangeGameState(gameState, m_GameState);
+
         m_GameState = gameState;
 
         switch (gameState)
         {
             case GameState.Setup:
                 {
-                    if (m_ConfirmFormationButton != null) { m_ConfirmFormationButton.SetActive(true); }
-
-                    //m_VisualBoard.EnableUnitSelection(m_CurrentPlayer, true);
-                    //m_VisualBoard.EnableUnitSelection(OtherPlayer(m_CurrentPlayer), false);
-
                     m_VisualBoard.ShowUnits(m_CurrentPlayer, true);
                     m_VisualBoard.ShowUnits(OtherPlayer(m_CurrentPlayer), false);
 
@@ -505,7 +501,6 @@ public class GameplayManager : MonoBehaviour
 
             case GameState.Game:
                 {
-                    if (m_ConfirmFormationButton != null) { m_ConfirmFormationButton.SetActive(false); }
                     m_VisualBoard.ShowUnits(m_CurrentPlayer, true);
                     m_VisualBoard.ShowUnits(OtherPlayer(m_CurrentPlayer), true);
 
@@ -515,7 +510,6 @@ public class GameplayManager : MonoBehaviour
 
             case GameState.EndGame:
                 {
-                    if (m_ConfirmFormationButton != null) { m_ConfirmFormationButton.SetActive(false); }
                     m_VisualBoard.ShowUnits(m_CurrentPlayer, true);
                     m_VisualBoard.ShowUnits(OtherPlayer(m_CurrentPlayer), true);
 
@@ -609,4 +603,8 @@ public class GameplayManager : MonoBehaviour
         return numAIPlayers;
     }
 
+    public bool PlacedAllUnits()
+    {
+        return m_VisualBoard.PlacedAllUnits(m_CurrentPlayer);
+    }
 }

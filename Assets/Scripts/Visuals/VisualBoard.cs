@@ -578,4 +578,20 @@ public class VisualBoard : MonoBehaviour
         //We're done with our move
         GameplayManager.Instance.SubmitMove();
     }
+
+    public bool PlacedAllUnits(PlayerColor playerColor)
+    {
+        foreach (VisualUnit unit in m_VisualUnits)
+        {
+            if (unit.GetPlayerColor() == playerColor && unit.GetUnitDefinition().Tier != 3)
+            {
+                if (unit.GetTile() == unit.GetReserveTile())
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
 }
