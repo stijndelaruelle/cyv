@@ -11,7 +11,7 @@ public class DifficultyChanger : MonoBehaviour
     private Text m_TextLabel;
 
     private string[] m_VisualDifficultyType;
-    private int m_ID = 1; //Stanger: Standard Medium
+    private int m_ID = 0; //Stanger: Standard Medium
 
     private void Awake()
     {
