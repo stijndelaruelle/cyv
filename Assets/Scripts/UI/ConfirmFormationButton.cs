@@ -16,11 +16,17 @@ public class ConfirmFormationButton : MonoBehaviour
     private void Start()
     {
         GameplayManager.Instance.OnChangeGameState += OnChangeGameState;
+        GameplayManager.Instance.OnNewGame += OnNewGame;
+    }
+
+    private void OnNewGame()
+    {
+        m_Button.gameObject.SetActive(true);
     }
 
     private void OnChangeGameState(GameState currentGameState, GameState previousGameState)
     {
-        if (previousGameState != m_GameState)
+        if (currentGameState == m_GameState)
             return;
 
         m_Button.gameObject.SetActive(false);

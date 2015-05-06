@@ -185,12 +185,12 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
         SetBorderColor(color);
     }
 
-    public void Highlight(bool enable)
+    public void Highlight(bool enable, bool showMarker)
     {
         //These are the circles indicating the movement range
         m_IsHighlighted = enable;
 
-        if (m_MovementMarker != null)
+        if (m_MovementMarker != null && showMarker)
         {
             m_MovementMarker.SetActive(enable);
         }
@@ -229,7 +229,7 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
                 }
                 else
                 {
-                    Highlight(hightLight);
+                    Highlight(hightLight, recursiveCall);
                     return;
                 }
             }
@@ -241,7 +241,7 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
             }
         }
 
-        Highlight(hightLight);
+        Highlight(hightLight, recursiveCall);
 
         if (m_Neighbours[dir] != null && movesLeft > 0)
         {
@@ -296,7 +296,7 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
     public void Reset()
     {
         HighlightPromotion(false);
-        Highlight(false);
+        Highlight(false, false);
     }
 
     //----------------

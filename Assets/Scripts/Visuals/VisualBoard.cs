@@ -468,7 +468,7 @@ public class VisualBoard : MonoBehaviour
                 }
             }
 
-            m_VisualTiles[i].Highlight(enable);
+            m_VisualTiles[i].Highlight(enable, true);
         }
     }
 
