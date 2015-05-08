@@ -582,7 +582,7 @@ public class GameplayManager : MonoBehaviour
         m_GameMode = gameMode;
 
         //Pass & play is handled at every swap turns
-        if (m_GameMode == GameMode.MirroredPlay)
+        if (m_GameMode == GameMode.MirroredPlay && NumAIPlayers() == 0)
         {
             m_VisualBoard.FlipBoard(false);
             m_VisualBoard.FlipUnits(PlayerColor.Black, true);

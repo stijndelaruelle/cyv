@@ -52,6 +52,12 @@ public class MenuManager : MonoBehaviour
     //--------------
     public void Awake()
     {
+        ShowInGameMenu(); //This is just so everything get's initialized!
+        ShowMainMenu();
+    }
+
+    public void OnEnable()
+    {
         ShowMainMenu();
     }
 
