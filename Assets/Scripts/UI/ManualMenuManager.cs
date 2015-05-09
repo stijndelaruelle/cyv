@@ -12,13 +12,10 @@ public class ManualMenuManager : MonoBehaviour
     private GameObject m_MainManualPanel = null;
 
     [SerializeField]
-    private GameObject m_BasicManualPanel = null;
+    private GameObject m_GameplayManualPanel = null;
 
     [SerializeField]
     private GameObject m_UnitsManualPanel = null;
-
-    [SerializeField]
-    private GameObject m_PromotionManualPanel = null;
 
     //--------------
     // Functions
@@ -44,15 +41,15 @@ public class ManualMenuManager : MonoBehaviour
         AnalyticsManager.Instance.LogScreen("Main Manual");
     }
 
-    public void ShowBasicManual()
+    public void ShowGameplayManual()
     {
-        if (m_BasicManualPanel == null)
+        if (m_GameplayManualPanel == null)
             return;
 
         HideAll();
-        m_BasicManualPanel.SetActive(true);
+        m_GameplayManualPanel.SetActive(true);
 
-        AnalyticsManager.Instance.LogScreen("Basic Manual");
+        AnalyticsManager.Instance.LogScreen("Gameplay Manual");
     }
 
     public void ShowUnitsManual()
@@ -66,30 +63,16 @@ public class ManualMenuManager : MonoBehaviour
         AnalyticsManager.Instance.LogScreen("Units Manual");
     }
 
-    public void ShowPromotionManual()
-    {
-        if (m_PromotionManualPanel == null)
-            return;
-
-        HideAll();
-        m_PromotionManualPanel.SetActive(true);
-
-        AnalyticsManager.Instance.LogScreen("Promotion Manual");
-    }
-
     private void HideAll()
     {
         //Deactivate everything
         if (m_MainManualPanel != null)
             m_MainManualPanel.SetActive(false);
 
-        if (m_BasicManualPanel != null)
-            m_BasicManualPanel.SetActive(false);
+        if (m_GameplayManualPanel != null)
+            m_GameplayManualPanel.SetActive(false);
 
         if (m_UnitsManualPanel != null)
             m_UnitsManualPanel.SetActive(false);
-
-        if (m_PromotionManualPanel != null)
-            m_PromotionManualPanel.SetActive(false);
     }
 }
