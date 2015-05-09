@@ -27,6 +27,13 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         set { m_IsDragged = value; }
     }
 
+    private RectTransform m_CanvasTransform; //The canvas transform, used for drag & drop
+
+    public void Awake()
+    {
+        m_CanvasTransform = GameObject.Find("Canvas").GetComponent<RectTransform>();
+    }
+
     public void Select(VisualUnit unit)
     {
         if (m_DraggedUnit != null) { m_DraggedUnit.Deselect(); }
@@ -247,7 +254,11 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor && !MenuManager.Instance.IsInManual())
             return;
 
-        transform.position = Input.mousePosition;
+        //The canvas transform
+        Vector2 localPoint;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(m_CanvasTransform, Input.mousePosition, eventData.pressEventCamera, out localPoint);
+        Debug.Log(localPoint);
+        transform.position = m_CanvasTransform.TransformPoint(localPoint);
     }
 
     //IEndDragHandler
