@@ -33,9 +33,12 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         m_DraggedUnit = unit;
 
         //Only enlarge units that we actually can pick up
-        if (unit != null && GameplayManager.Instance.CurrentPlayer == m_PlayerColor)
+        if (unit != null)
         {
-            transform.localScale = new Vector3(3.0f, 3.0f, 1.0f);
+            if (GameplayManager.Instance.CurrentPlayer == m_PlayerColor || MenuManager.Instance.IsInManual())
+            {
+                transform.localScale = new Vector3(3.0f, 3.0f, 1.0f);
+            }
         }
     }
 
@@ -128,7 +131,7 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     private void ShowMovementRange(bool enable)
     {
         //Very special case, you can always go to your entire half of the board
-        if (GameplayManager.Instance.GameState == GameState.Setup)
+        if (GameplayManager.Instance.GameState == GameState.Setup && !MenuManager.Instance.IsInManual())
         {
             GameplayManager.Instance.HighlightSetupZone(enable);
             return;
@@ -181,19 +184,22 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     public void OnPointerDown(PointerEventData eventData)
     {
         //If we're allowed to promote this unit
-        if (GameplayManager.Instance.GameState == GameState.Promotion)
+        if (GameplayManager.Instance.GameState == GameState.Promotion && !MenuManager.Instance.IsInManual())
         {
             if (OnPromote != null) OnPromote(this);
             return;
         }
 
         //This means the user used the click & click method to place units
-        if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor)
+        if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor && !MenuManager.Instance.IsInManual())
         {
             //If we are moving a character here, 
-            if (m_DraggedUnit != null && m_DraggedUnit.GetPlayerColor() == GameplayManager.Instance.CurrentPlayer)
+            if (m_DraggedUnit != null)
             {
-                m_Tile.OnPointerDown(eventData);
+                if (m_DraggedUnit.GetPlayerColor() == GameplayManager.Instance.CurrentPlayer || MenuManager.Instance.IsInManual())
+                {
+                    m_Tile.OnPointerDown(eventData);
+                }
             }
             //If we're just checking the movement range
             else
@@ -215,10 +221,10 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     //IBeginDragHandler
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (GameplayManager.Instance.GameState == GameState.Promotion)
+        if (GameplayManager.Instance.GameState == GameState.Promotion && !MenuManager.Instance.IsInManual())
             return;
 
-        if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor)
+        if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor && !MenuManager.Instance.IsInManual())
             return;
 
         //Debug.Log("Begin Drag!");
@@ -235,10 +241,10 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     //IDragHandler
     public void OnDrag(PointerEventData eventData)
     {
-        if (GameplayManager.Instance.GameState == GameState.Promotion)
+        if (GameplayManager.Instance.GameState == GameState.Promotion && !MenuManager.Instance.IsInManual())
             return;
 
-        if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor)
+        if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor && !MenuManager.Instance.IsInManual())
             return;
 
         transform.position = Input.mousePosition;

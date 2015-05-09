@@ -180,4 +180,9 @@ public class MenuManager : MonoBehaviour
         if (m_EndGamePanel != null)
             m_EndGamePanel.SetActive(false);
     }
+
+    public bool IsInManual()
+    {
+        return m_ManualPanel.activeInHierarchy;
+    }
 }

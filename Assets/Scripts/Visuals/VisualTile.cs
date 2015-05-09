@@ -306,7 +306,7 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
     //IPointerDownHandler
     public void OnPointerDown(PointerEventData eventData)
     {
-        if (GameplayManager.Instance.GameState == GameState.Promotion)
+        if (GameplayManager.Instance.GameState == GameState.Promotion && !MenuManager.Instance.IsInManual())
             return;
 
         if (VisualUnit.m_DraggedUnit != null)
@@ -337,8 +337,10 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
 
     private void PlaceUnit()
     {
-        if (VisualUnit.m_DraggedUnit != null &&
-            GameplayManager.Instance.CurrentPlayer == VisualUnit.m_DraggedUnit.GetPlayerColor())
+        if (VisualUnit.m_DraggedUnit == null)
+            return;
+
+        if (GameplayManager.Instance.CurrentPlayer == VisualUnit.m_DraggedUnit.GetPlayerColor() || MenuManager.Instance.IsInManual())
         {
             //Debug.Log("Place Unit!");
 
@@ -367,7 +369,8 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
 
                     //If this unit had an equal or higher rank than the unit that killed it, we allow the player to promote a unit!
                     if (GameplayManager.Instance.GameState == GameState.Game &&
-                        VisualUnit.m_DraggedUnit.GetUnitDefinition().Tier <= currentUnit.GetUnitDefinition().Tier)
+                        VisualUnit.m_DraggedUnit.GetUnitDefinition().Tier <= currentUnit.GetUnitDefinition().Tier &&
+                        !MenuManager.Instance.IsInManual())
                     {
                         promote = true;
                     }
@@ -379,7 +382,11 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
                     !promote)
                 {
                     VisualUnit.m_DraggedUnit.SetTile(this);
-                    GameplayManager.Instance.SubmitMove();
+
+                    if (!MenuManager.Instance.IsInManual())
+                    {
+                        GameplayManager.Instance.SubmitMove();
+                    }
                 }
                 else
                 {
