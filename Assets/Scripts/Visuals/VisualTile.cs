@@ -48,6 +48,11 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
     private Color m_OriginalColor = Color.magenta; //so funny
 
     private bool m_IsHighlighted = false;
+    public bool IsHighlighted
+    {
+        get { return m_IsHighlighted; }
+    }
+
     private bool m_IsHighlightedPromotion = false;
     public bool IsHighligtedPromotion
     {

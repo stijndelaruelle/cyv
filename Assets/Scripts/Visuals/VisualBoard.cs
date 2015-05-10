@@ -287,7 +287,6 @@ public class VisualBoard : MonoBehaviour
                     visualUnit.SetReserveTile(m_ReserveVisualTiles[playerID]);
                     visualUnit.SetParentTransform(gameObject.transform);
                     visualUnit.SetTile(null); //So it's positionned a the reserve tile
-
                     m_VisualUnits.Add(visualUnit);
                 }
             }

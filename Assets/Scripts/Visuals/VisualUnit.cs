@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
@@ -12,6 +13,14 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     public VisualUnitDelegate OnPromote;
 
     public static VisualUnit m_DraggedUnit = null;
+
+    //Our sprite, as it has to be higher up while draggin
+    [SerializeField]
+    private RectTransform m_SpriteTransform;
+
+    //The big blob that is used for indicating the tile we're on
+    [SerializeField]
+    private RectTransform m_DragIndicator;
 
     private VisualTile m_Tile = null;
     private VisualTile m_ReserveTile = null; //The tile we need to go to when we die
@@ -243,6 +252,18 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
 
         EnableDragging(false);
         m_IsDragged = true;
+
+        Vector3 newPoint = GetConvertedPosition(eventData);
+        transform.position = newPoint;
+ 
+        if (m_SpriteTransform != null)
+            m_SpriteTransform.position = new Vector3(newPoint.x, newPoint.y + 1, newPoint.z);
+
+        if (m_DragIndicator != null)
+        {
+            m_DragIndicator.gameObject.SetActive(true);
+            m_DragIndicator.position = newPoint;
+        }
     }
 
     //IDragHandler
@@ -254,11 +275,37 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor && !MenuManager.Instance.IsInManual())
             return;
 
-        //The canvas transform
-        Vector2 localPoint;
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(m_CanvasTransform, Input.mousePosition, eventData.pressEventCamera, out localPoint);
-        Debug.Log(localPoint);
-        transform.position = m_CanvasTransform.TransformPoint(localPoint);
+        Vector3 newPoint = GetConvertedPosition(eventData);
+        transform.position = newPoint;
+
+        if (m_SpriteTransform != null)
+            m_SpriteTransform.position = new Vector3(newPoint.x, newPoint.y + 1, newPoint.z);
+
+        if (m_DragIndicator != null)
+        {
+            //Make the drag object snap to tiles
+            var raycastResults = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(eventData, raycastResults);
+
+            if (raycastResults.Count > 0)
+            {
+                GameObject go = raycastResults[0].gameObject;
+
+                //First is just an empty tile, second is when there is an unit on that tile (LAME but w/e)
+                VisualTile visualTile = go.transform.parent.GetComponent<VisualTile>();
+                if (visualTile == null) { visualTile = go.transform.parent.parent.parent.GetComponent<VisualTile>(); }
+
+                if (visualTile != null && visualTile.IsHighlighted)
+                {
+                    m_DragIndicator.gameObject.SetActive(true);
+                    m_DragIndicator.position = go.transform.position;
+                }
+                else
+                {
+                    m_DragIndicator.gameObject.SetActive(false);
+                }
+            }
+        }
     }
 
     //IEndDragHandler
@@ -266,6 +313,28 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     {
         //We should always be able to deselect, otherwise showing the enemies movement range bugs out on the last used unit.
         Select(null);
+
+        if (GameplayManager.Instance.GameState == GameState.Promotion && !MenuManager.Instance.IsInManual())
+            return;
+
+        Vector3 newPoint = GetConvertedPosition(eventData);
+        transform.position = newPoint;
+
+        if (m_SpriteTransform != null)
+            m_SpriteTransform.position = newPoint;
+
+        if (m_DragIndicator != null)
+        {
+            m_DragIndicator.gameObject.SetActive(false);
+        }
+            
+    }
+
+    private Vector3 GetConvertedPosition(PointerEventData eventData)
+    {
+        Vector2 localPoint;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(m_CanvasTransform, Input.mousePosition, eventData.pressEventCamera, out localPoint);
+        return m_CanvasTransform.TransformPoint(localPoint);
     }
 
 }
