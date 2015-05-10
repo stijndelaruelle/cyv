@@ -390,35 +390,72 @@ public class GameplayManager : MonoBehaviour
             currentBoardState.SetCurrentPlayer(m_CurrentPlayer);
 
             //Load some test data
+            int randSetup = UnityEngine.Random.Range(0, 100);
+            int setupID = 1;
+            if (randSetup > 50)
+                setupID = 1;
+
             if (m_CurrentPlayer == PlayerColor.White)
             {
                 switch (m_AIType)
                 {
                     case AIType.Standard:
                     {
-                        BoardStateSaveDataWhiteSymmetric saveData = new BoardStateSaveDataWhiteSymmetric();
-                        currentBoardState.LoadBoard(saveData);
+                        if (setupID == 0)
+                        {
+                            BoardStateSaveDataWhiteSymmetric1 saveData = new BoardStateSaveDataWhiteSymmetric1();
+                            currentBoardState.LoadBoard(saveData);
+                        }
+                        else
+                        {
+                            BoardStateSaveDataWhiteSymmetric2 saveData = new BoardStateSaveDataWhiteSymmetric2();
+                            currentBoardState.LoadBoard(saveData);
+                        }
                         break;
                     }
 
                     case AIType.Aggressive:
                     {
-                        BoardStateSaveDataWhiteAggressive saveData = new BoardStateSaveDataWhiteAggressive();
-                        currentBoardState.LoadBoard(saveData);
+                        if (setupID == 0)
+                        {
+                            BoardStateSaveDataWhiteAggressive1 saveData = new BoardStateSaveDataWhiteAggressive1();
+                            currentBoardState.LoadBoard(saveData);
+                        }
+                        else
+                        {
+                            BoardStateSaveDataWhiteAggressive2 saveData = new BoardStateSaveDataWhiteAggressive2();
+                            currentBoardState.LoadBoard(saveData);
+                        }
                         break;
                     }
 
                     case AIType.Defensive:
                     {
-                        BoardStateSaveDataWhiteDefensive saveData = new BoardStateSaveDataWhiteDefensive();
-                        currentBoardState.LoadBoard(saveData);
+                        if (setupID == 0)
+                        {
+                            BoardStateSaveDataWhiteDefensive1 saveData = new BoardStateSaveDataWhiteDefensive1();
+                            currentBoardState.LoadBoard(saveData);
+                        }
+                        else
+                        {
+                            BoardStateSaveDataWhiteDefensive2 saveData = new BoardStateSaveDataWhiteDefensive2();
+                            currentBoardState.LoadBoard(saveData);
+                        }
                         break;
                     }
 
                     default:
                     {
-                        BoardStateSaveDataWhiteSymmetric saveData = new BoardStateSaveDataWhiteSymmetric();
-                        currentBoardState.LoadBoard(saveData);
+                        if (setupID == 0)
+                        {
+                            BoardStateSaveDataWhiteSymmetric1 saveData = new BoardStateSaveDataWhiteSymmetric1();
+                            currentBoardState.LoadBoard(saveData);
+                        }
+                        else
+                        {
+                            BoardStateSaveDataWhiteSymmetric2 saveData = new BoardStateSaveDataWhiteSymmetric2();
+                            currentBoardState.LoadBoard(saveData);
+                        }
                         break;
                     }
                 }
@@ -430,29 +467,61 @@ public class GameplayManager : MonoBehaviour
                 {
                     case AIType.Standard:
                         {
-                            BoardStateSaveDataBlackSymmetric saveData = new BoardStateSaveDataBlackSymmetric();
-                            currentBoardState.LoadBoard(saveData);
+                            if (setupID == 0)
+                            {
+                                BoardStateSaveDataBlackSymmetric1 saveData = new BoardStateSaveDataBlackSymmetric1();
+                                currentBoardState.LoadBoard(saveData);
+                            }
+                            else
+                            {
+                                BoardStateSaveDataBlackSymmetric2 saveData = new BoardStateSaveDataBlackSymmetric2();
+                                currentBoardState.LoadBoard(saveData);
+                            }
                             break;
                         }
 
                     case AIType.Aggressive:
                         {
-                            BoardStateSaveDataBlackAggressive saveData = new BoardStateSaveDataBlackAggressive();
-                            currentBoardState.LoadBoard(saveData);
+                            if (setupID == 0)
+                            {
+                                BoardStateSaveDataBlackAggressive1 saveData = new BoardStateSaveDataBlackAggressive1();
+                                currentBoardState.LoadBoard(saveData);
+                            }
+                            else
+                            {
+                                BoardStateSaveDataBlackAggressive2 saveData = new BoardStateSaveDataBlackAggressive2();
+                                currentBoardState.LoadBoard(saveData);
+                            }
                             break;
                         }
 
                     case AIType.Defensive:
                         {
-                            BoardStateSaveDataBlackDefensive saveData = new BoardStateSaveDataBlackDefensive();
-                            currentBoardState.LoadBoard(saveData);
+                            if (setupID == 0)
+                            {
+                                BoardStateSaveDataBlackDefensive1 saveData = new BoardStateSaveDataBlackDefensive1();
+                                currentBoardState.LoadBoard(saveData);
+                            }
+                            else
+                            {
+                                BoardStateSaveDataBlackDefensive2 saveData = new BoardStateSaveDataBlackDefensive2();
+                                currentBoardState.LoadBoard(saveData);
+                            }
                             break;
                         }
 
                     default:
                         {
-                            BoardStateSaveDataBlackSymmetric saveData = new BoardStateSaveDataBlackSymmetric();
-                            currentBoardState.LoadBoard(saveData);
+                            if (setupID == 0)
+                            {
+                                BoardStateSaveDataBlackSymmetric1 saveData = new BoardStateSaveDataBlackSymmetric1();
+                                currentBoardState.LoadBoard(saveData);
+                            }
+                            else
+                            {
+                                BoardStateSaveDataBlackSymmetric2 saveData = new BoardStateSaveDataBlackSymmetric2();
+                                currentBoardState.LoadBoard(saveData);
+                            }
                             break;
                         }
                 }

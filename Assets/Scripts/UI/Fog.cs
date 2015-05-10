@@ -15,9 +15,12 @@ public class Fog : MonoBehaviour
 	
     private void OnDestroy()
     {
-        GameplayManager.Instance.OnNewGame -= OnNewGame;
-        GameplayManager.Instance.OnChangePlayer -= OnChangePlayer;
-        GameplayManager.Instance.OnChangeGameState -= OnChangeGameState;
+        if (GameplayManager.Instance != null)
+        {
+            GameplayManager.Instance.OnNewGame -= OnNewGame;
+            GameplayManager.Instance.OnChangePlayer -= OnChangePlayer;
+            GameplayManager.Instance.OnChangeGameState -= OnChangeGameState;
+        }
     }
 
     private void OnNewGame()
