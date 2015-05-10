@@ -130,6 +130,9 @@ public class MenuManager : MonoBehaviour
         ShowCommon(false);
         m_InGamePanel.SetActive(true);
 
+        //Otherwise the end game message may dissapear
+        GameplayManager.Instance.CheckGameStates();
+
         AnalyticsManager.Instance.LogScreen("Resume");
     }
 

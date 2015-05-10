@@ -8,7 +8,7 @@ public enum PlayerColor
     Black  //Max
 }
 
-public class BoardState
+public class BoardState : ThreadedJob
 {
     private struct Move
     {
@@ -28,6 +28,8 @@ public class BoardState
 
     public static int DIR_NUM = 12;
     public static int BOARD_SIZE = 6;
+
+    public VoidDelegate OnThreadFinishedEvent;
 
     //List of units (0-x = white, x-(x+x) = black)
     private List<Unit> m_Units;
@@ -62,6 +64,12 @@ public class BoardState
     private int m_FromTileID = -1;
     private int m_ToTileID = -1;
     private int m_PromotionTileID = -1;
+
+    //Current thread data
+    List<BoardState> m_ThreadBoardStates;
+    int m_ThreadAlpha;
+    int m_ThreadBeta;
+    int m_ThreadId;
 
     public int FromTileID
     {
@@ -354,6 +362,11 @@ public class BoardState
 
     public void CopyBoard(BoardState otherState)
     {
+        m_ThreadBoardStates = otherState.m_ThreadBoardStates;
+        m_ThreadAlpha = otherState.m_ThreadAlpha;
+        m_ThreadBeta = otherState.m_ThreadBeta;
+        m_ThreadId = otherState.m_ThreadId;
+
         m_CurrentPlayer = otherState.m_CurrentPlayer;
         m_FromTileID = otherState.m_FromTileID;
         m_ToTileID = otherState.m_ToTileID;
@@ -370,18 +383,43 @@ public class BoardState
 
     public void ProcessAllMoves(List<BoardState> boardStates, int alpha, int beta, int id = 0)
     {
-        if (id < boardStates.Count)
+        //ThreadFunction(boardStates, alpha, alpha, id);
+        m_ThreadBoardStates = boardStates;
+        m_ThreadAlpha = alpha;
+        m_ThreadBeta = beta;
+        m_ThreadId = id;
+
+        ThreadFunction();
+
+        if (id == 0)
+        {
+            OnThreadFinished();
+        }
+
+        //if (id != 0)
+        //{
+        //    ThreadFunction();
+        //}
+        //else
+        //{
+        //    StartThread();
+        //}
+    }
+
+    protected override void ThreadFunction()
+    {
+        if (m_ThreadId < m_ThreadBoardStates.Count)
         {
             //Reset the value to the worst case scenario
             m_Value = int.MaxValue;
             if (m_CurrentPlayer == PlayerColor.Black) { m_Value *= -1; }
 
             List<Move> goodMoves = new List<Move>();
-            int ownMovesTillValue = id;
+            int ownMovesTillValue = m_ThreadId;
 
             //Get the next boardstate & make it a copy of this one
-            BoardState nextBoardState = boardStates[id];
-            ++id;
+            BoardState nextBoardState = m_ThreadBoardStates[m_ThreadId];
+            ++m_ThreadId;
 
             //Go trough all the units
             for (int i = 0; i < m_Units.Count; ++i)
@@ -392,7 +430,7 @@ public class BoardState
                 {
                     //Our worst case scenario value is higher than the minimizer value above us.
                     //The minimizer will never accept any of our values, so we can quit right here.
-                    if (m_Value > beta)
+                    if (m_Value > m_ThreadBeta)
                     {
                         //Debug.Log("Pruned!");
                         break;
@@ -402,7 +440,7 @@ public class BoardState
                 {
                     //Our worst case scenario value is lower than the maximizer value above us.
                     //The maximizer will never accept any of our values, so we can quit right here.
-                    if (m_Value < alpha)
+                    if (m_Value < m_ThreadAlpha)
                     {
                         //Debug.Log("Pruned!");
                         break;
@@ -428,7 +466,7 @@ public class BoardState
                     {
                         //Our worst case scenario value is higher than the minimizer value above us.
                         //The minimizer will never accept any of our values, so we can quit right here.
-                        if (m_Value > beta)
+                        if (m_Value > m_ThreadBeta)
                         {
                             //Debug.Log("Pruned!");
                             break;
@@ -438,7 +476,7 @@ public class BoardState
                     {
                         //Our worst case scenario value is lower than the maximizer value above us.
                         //The maximizer will never accept any of our values, so we can quit right here.
-                        if (m_Value < alpha)
+                        if (m_Value < m_ThreadAlpha)
                         {
                             //Debug.Log("Pruned!");
                             break;
@@ -479,7 +517,9 @@ public class BoardState
                         {
                             //For each of them process all the moves
                             //TEMP FIX TODO: Just pick a random one for now (otherwise another extra layer)
-                            int randID = Random.Range(0, promotableUnitIDs.Count);
+                            System.Random rand = new System.Random();
+                            int randID = rand.Next(0, promotableUnitIDs.Count);
+
                             Unit promotedUnit = nextBoardState.Units[promotableUnitIDs[randID]];
 
                             //Find an available upgrade unit
@@ -504,8 +544,8 @@ public class BoardState
                     }
                     #endregion
 
-                    if (id < boardStates.Count) { nextBoardState.SwapCurrentPlayer(); }
-                    nextBoardState.ProcessAllMoves(boardStates, alpha, beta, id);
+                    if (m_ThreadId < m_ThreadBoardStates.Count) { nextBoardState.SwapCurrentPlayer(); }
+                    nextBoardState.ProcessAllMoves(m_ThreadBoardStates, m_ThreadAlpha, m_ThreadBeta, m_ThreadId);
 
                     //Get the value and make and compare it
                     bool addMove = false;
@@ -523,7 +563,7 @@ public class BoardState
                     {
                         //Determines the min amount of moves to get this value
                         //Later used to resolve a tie
-                        int movesTillValue = id;
+                        int movesTillValue = m_ThreadId;
                         if (m_Value == int.MaxValue || m_Value == int.MinValue) { m_Value = EvaluateBoard(); }
 
                         //If the value is exactly the same as ours, then we didn't even need that extra move
@@ -544,11 +584,11 @@ public class BoardState
                         //Set the alpha & beta
                         if (m_CurrentPlayer == PlayerColor.Black)
                         {
-                            alpha = m_Value;
+                            m_ThreadAlpha = m_Value;
                         }
                         else
                         {
-                            beta = m_Value;
+                            m_ThreadBeta = m_Value;
                         }
                     }
                 }
@@ -595,7 +635,7 @@ public class BoardState
             if (bestMoves.Count > 0)
             {
                 //Take whatever we have
-                if (bestMoves.Count == 1)  { m_BestMove = bestMoves[0]; }
+                if (bestMoves.Count == 1) { m_BestMove = bestMoves[0]; }
                 else
                 {
                     List<Move> randomMovePool = new List<Move>();
@@ -631,6 +671,13 @@ public class BoardState
             //Just calculate the board and that's it!
             m_Value = EvaluateBoard();
         }
+    }
+
+    protected override void OnThreadFinished()
+    {
+        // This is executed by the Unity main thread when the job is finished
+        if (OnThreadFinishedEvent != null)
+            OnThreadFinishedEvent();
     }
 
     public void ProcessBestMove()
@@ -775,5 +822,10 @@ public class BoardState
         }
 
         return true;
+    }
+
+    public void Update()
+    {
+        UpdateThread();
     }
 }

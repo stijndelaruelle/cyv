@@ -227,6 +227,9 @@ public class GameplayManager : MonoBehaviour
         {
             AIMove();
         }
+
+        m_VisualBoard.CurrentBoardState.OnThreadFinishedEvent = null;
+        m_VisualBoard.CurrentBoardState.OnThreadFinishedEvent += OnAILogicFinished;
     }
 
     public void HighlightSetupZone(bool enable)
@@ -290,7 +293,7 @@ public class GameplayManager : MonoBehaviour
         AnalyticsManager.Instance.LogEvent("Default", "Moved", "Did a move.", m_CurrentBoardStateID);
     }
 
-    private void CheckGameStates()
+    public void CheckGameStates()
     {
         //If black submits a move & we're currently in setup mode, we swap to game mode!
         if (m_GameState == GameState.Setup && m_CurrentPlayer == PlayerColor.Black)
@@ -379,7 +382,7 @@ public class GameplayManager : MonoBehaviour
     {
         if (m_GameState == GameState.Game)
         {
-            StartCoroutine(AIMoveRoutine());
+            AIMoveLogic();
         }
         else
         {
@@ -533,27 +536,29 @@ public class GameplayManager : MonoBehaviour
         }
     }
 
-    private IEnumerator AIMoveRoutine()
+    private void AIMoveLogic()
     {
-        //Quickly placed into a routine, to mask hickups (& make AI vs AI look sensible)
-        yield return new WaitForSeconds(0.2f);
-
         //Get the current boardstate
         if (m_VisualBoard == null)
-            yield return null;
+            return;
 
         BoardState currentBoardState = m_VisualBoard.CurrentBoardState;
         currentBoardState.SetCurrentPlayer(m_CurrentPlayer);
 
         //Calculate all the moves
-        DateTime time = DateTime.Now;
-        currentBoardState.ProcessAllMoves(m_AIBoardStates, int.MinValue, int.MaxValue, 0);
-        DateTime time2 = DateTime.Now;
+        //DateTime time = DateTime.Now;
+        currentBoardState.ProcessAllMoves(m_AIBoardStates, int.MinValue, int.MaxValue, 0); //Runs on a separat thread
+    }
 
-        double ms = (time2 - time).TotalMilliseconds;
-        Debug.Log("Processing all the moves for " + m_AIMoveDepth + " moves took " + ms + "ms");
+    private void OnAILogicFinished()
+    {
+        //DateTime time2 = DateTime.Now;
+
+        //double ms = (time2 - time).TotalMilliseconds;
+        //Debug.Log("Processing all the moves for " + m_AIMoveDepth + " moves took " + ms + "ms");
 
         //Now we found our best, let's do that
+        BoardState currentBoardState = m_VisualBoard.CurrentBoardState;
         currentBoardState.ProcessBestMove();
 
         //Play the move sound!
@@ -562,8 +567,6 @@ public class GameplayManager : MonoBehaviour
         //Show visually & Done!
         m_VisualBoard.LoadBoardState(m_VisualBoard.CurrentBoardState);
         SubmitMove();
-
-        yield return null;
     }
 
     public void SetGameState(GameState gameState)
@@ -623,14 +626,14 @@ public class GameplayManager : MonoBehaviour
 
                     if (NumAIPlayers() == 1)
                     {
-                        if (m_PlayerTypes[(int)winner] == PlayerType.Human) { text = "Victory!"; }
-                        else                                                { text = "Defeat"; }
+                        if (m_PlayerTypes[(int)winner] == PlayerType.Human) { text = "VICTORY!"; }
+                        else                                                { text = "DEFEAT"; }
                     }
 
                     //If both players where humans or AI's just show the color
                     else
                     {
-                        text = winner.ToString() + " wins!";     
+                        text = winner.ToString().ToUpper() + " WINS!";     
                     }
 
                     m_EndGameText.text = text;
@@ -690,5 +693,13 @@ public class GameplayManager : MonoBehaviour
     public bool PlacedAllUnits()
     {
         return m_VisualBoard.PlacedAllUnits(m_CurrentPlayer);
+    }
+
+    void Update()
+    {
+        if (m_VisualBoard.CurrentBoardState == null)
+            return;
+
+        m_VisualBoard.CurrentBoardState.Update();
     }
 }
