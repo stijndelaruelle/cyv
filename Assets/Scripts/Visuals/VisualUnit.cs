@@ -53,7 +53,7 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         {
             if (GameplayManager.Instance.CurrentPlayer == m_PlayerColor || MenuManager.Instance.IsInManual())
             {
-                transform.localScale = new Vector3(3.0f, 3.0f, 1.0f);
+                transform.localScale = new Vector3(2.0f, 2.0f, 1.0f);
             }
         }
     }
