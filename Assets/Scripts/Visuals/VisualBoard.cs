@@ -463,7 +463,7 @@ public class VisualBoard : MonoBehaviour
                 }
             }
 
-            m_VisualTiles[i].Highlight(enable, true);
+            m_VisualTiles[i].Highlight(enable, playerColor, true);
         }
     }
 

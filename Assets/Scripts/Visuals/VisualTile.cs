@@ -39,7 +39,7 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
     private GameObject m_HexBorder = null; //Used for the border color of the VisualTile
 
     [SerializeField]
-    private GameObject m_MovementMarker = null; //Used to show the movement
+    private Image m_MovementMarker = null; //Used to show the movement
 
     [SerializeField]
     private GameObject m_UnitParent = null;
@@ -77,7 +77,7 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
             m_HexBorder.SetActive(false);
 
         if (m_MovementMarker != null)
-            m_MovementMarker.SetActive(false);
+            m_MovementMarker.gameObject.SetActive(false);
     }
 
     public void SetID(int id)
@@ -190,14 +190,21 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
         SetBorderColor(color);
     }
 
-    public void Highlight(bool enable, bool showMarker)
+    public void Highlight(bool enable, PlayerColor playerColor, bool showMarker)
     {
         //These are the circles indicating the movement range
         m_IsHighlighted = enable;
-
         if (m_MovementMarker != null && showMarker)
         {
-            m_MovementMarker.SetActive(enable);
+            m_MovementMarker.gameObject.SetActive(enable);
+
+            Color color = new Color(0.7f, 0.15f, 0.15f, 1.0f); //RED
+            if (playerColor == GameplayManager.Instance.CurrentPlayer)
+            {
+                color = new Color(0.33f, 0.43f, 0.13f, 1.0f); //GREEN
+            }
+
+            m_MovementMarker.color = color;
         }
     }
 
@@ -234,7 +241,7 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
                 }
                 else
                 {
-                    Highlight(hightLight, recursiveCall);
+                    Highlight(hightLight, playerColor, recursiveCall);
                     return;
                 }
             }
@@ -246,7 +253,7 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
             }
         }
 
-        Highlight(hightLight, recursiveCall);
+        Highlight(hightLight, playerColor, recursiveCall);
 
         if (m_Neighbours[dir] != null && movesLeft > 0)
         {
@@ -301,7 +308,7 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
     public void Reset()
     {
         HighlightPromotion(false);
-        Highlight(false, false);
+        Highlight(false, PlayerColor.White, false); //Playercolor doesn't matter if you disable
     }
 
     //----------------
