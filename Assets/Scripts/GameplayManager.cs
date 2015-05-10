@@ -623,8 +623,8 @@ public class GameplayManager : MonoBehaviour
 
                     if (NumAIPlayers() == 1)
                     {
-                        if (m_PlayerTypes[(int)winner] == PlayerType.Human) { text = "You win!"; }
-                        else                                                { text = "You lose!"; }
+                        if (m_PlayerTypes[(int)winner] == PlayerType.Human) { text = "Victory!"; }
+                        else                                                { text = "Defeat"; }
                     }
 
                     //If both players where humans or AI's just show the color
