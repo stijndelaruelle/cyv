@@ -255,9 +255,14 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
 
         Vector3 newPoint = GetConvertedPosition(eventData);
         transform.position = newPoint;
- 
+
         if (m_SpriteTransform != null)
-            m_SpriteTransform.position = new Vector3(newPoint.x, newPoint.y + 1, newPoint.z);
+        {
+            float offset = 1.0f;
+            if (transform.rotation.z != 0.0f) offset = -1.0f;
+
+            m_SpriteTransform.position = new Vector3(newPoint.x, newPoint.y + offset, newPoint.z);
+        }
 
         if (m_DragIndicator != null)
         {
@@ -279,7 +284,12 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         transform.position = newPoint;
 
         if (m_SpriteTransform != null)
-            m_SpriteTransform.position = new Vector3(newPoint.x, newPoint.y + 1, newPoint.z);
+        {
+            float offset = 1.0f;
+            if (transform.rotation.z != 0.0f) offset = -1.0f;
+
+            m_SpriteTransform.position = new Vector3(newPoint.x, newPoint.y + offset, newPoint.z);
+        }
 
         if (m_DragIndicator != null)
         {
@@ -298,11 +308,12 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
                 if (visualTile != null && visualTile.IsHighlighted)
                 {
                     m_DragIndicator.gameObject.SetActive(true);
+                    m_DragIndicator.localScale = Vector3.one;
                     m_DragIndicator.position = go.transform.position;
                 }
                 else
                 {
-                    m_DragIndicator.gameObject.SetActive(false);
+                    m_DragIndicator.localScale = Vector3.zero; // Don't do this, it skrews the OnEndDrag logic -> LAME .SetActive(false);
                 }
             }
         }
@@ -313,9 +324,6 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     {
         //We should always be able to deselect, otherwise showing the enemies movement range bugs out on the last used unit.
         Select(null);
-
-        if (GameplayManager.Instance.GameState == GameState.Promotion && !MenuManager.Instance.IsInManual())
-            return;
 
         if (m_DragIndicator != null && m_DragIndicator.gameObject.activeSelf)
         {
