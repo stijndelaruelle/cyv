@@ -29,24 +29,28 @@ public class ConfirmFormationButton : MonoBehaviour
         if (currentGameState == m_GameState)
             return;
 
-        m_Button.gameObject.SetActive(false);
+        #if !UNITY_EDITOR
+            m_Button.gameObject.SetActive(false);
+        #endif
     }
 
     private void Update()
     {
-        if (GameplayManager.Instance.PlacedAllUnits())
-        {
-            m_Button.interactable = true;
+        #if !UNITY_EDITOR
+            if (GameplayManager.Instance.PlacedAllUnits())
+            {
+                m_Button.interactable = true;
 
-            Color color = m_Text.color;
-            m_Text.color = new Color(color.r, color.g, color.b, 1.0f);
-        }
-        else
-        {
-            m_Button.interactable = false;
+                Color color = m_Text.color;
+                m_Text.color = new Color(color.r, color.g, color.b, 1.0f);
+            }
+            else
+            {
+                m_Button.interactable = false;
 
-            Color color = m_Text.color;
-            m_Text.color = new Color(color.r, color.g, color.b, 0.5f);
-        }
+                Color color = m_Text.color;
+                m_Text.color = new Color(color.r, color.g, color.b, 0.5f);
+            }
+        #endif
     }
 }

@@ -52,6 +52,7 @@ public class GameplayManager : MonoBehaviour
     //------------------
     public VoidDelegate OnNewGame;
     public GameStateDelegate OnChangeGameState;
+    public PlayerColorDelegate OnChangePlayer;
 
     //------------------
     // Datamembers
@@ -85,6 +86,11 @@ public class GameplayManager : MonoBehaviour
     }
 
     private GameMode m_GameMode = GameMode.MirroredPlay;
+    public GameMode GameMode
+    {
+        get { return m_GameMode; }
+    }
+
     private AIType m_AIType = AIType.Standard;
     public AIType AIType
     {
@@ -347,6 +353,9 @@ public class GameplayManager : MonoBehaviour
         if (m_CurrentPlayer == PlayerColor.White) { m_CurrentPlayer = PlayerColor.Black; }
         else                                      { m_CurrentPlayer = PlayerColor.White; }
 
+        if (OnChangePlayer != null)
+            OnChangePlayer(m_CurrentPlayer);
+
         //m_VisualBoard.EnableUnitSelection(m_CurrentPlayer, true);
         //m_VisualBoard.EnableUnitSelection(OtherPlayer(m_CurrentPlayer), false);
 
@@ -490,7 +499,7 @@ public class GameplayManager : MonoBehaviour
 
     public void SetGameState(GameState gameState)
     {
-        if (OnChangeGameState != null)
+        if (OnChangeGameState != null && gameState != m_GameState)
             OnChangeGameState(gameState, m_GameState);
 
         m_GameState = gameState;
