@@ -266,13 +266,14 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
         //Highlight this tile for a unit that wishes to promote
         m_IsHighlightedPromotion = enable;
 
-        Color color = new Color(0.0f, 0.0f, 0.0f, 0.75f);
-        if (!enable) { color = m_OriginalColor; }
-        SetBorderMaterial(HexBorder.HexBorderMaterial.Promote);
-
         if (enable)
         {
             //Play a particle effect
+            SetBorderMaterial(HexBorder.HexBorderMaterial.Promote);
+        }
+        else
+        {
+            SetBorderMaterial(HexBorder.HexBorderMaterial.None);
         }
     }
 

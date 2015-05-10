@@ -86,6 +86,7 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         m_Tile = tile;
 
         transform.SetParent(tile.GetUnitParent());
+        transform.position = new Vector3(transform.position.x, transform.position.y, -1.0f);
         transform.localScale = new Vector3(1.0f, 1.0f, 1.0f); //For some reason this resets
     }
 
