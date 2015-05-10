@@ -317,17 +317,16 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         if (GameplayManager.Instance.GameState == GameState.Promotion && !MenuManager.Instance.IsInManual())
             return;
 
-        Vector3 newPoint = GetConvertedPosition(eventData);
-        transform.position = newPoint;
-
-        if (m_SpriteTransform != null)
-            m_SpriteTransform.position = newPoint;
-
-        if (m_DragIndicator != null)
+        if (m_DragIndicator != null && m_DragIndicator.gameObject.activeSelf)
         {
+            Vector3 newPoint = GetConvertedPosition(eventData);
+            transform.position = newPoint;
+
+            if (m_SpriteTransform != null)
+                m_SpriteTransform.position = newPoint;
+
             m_DragIndicator.gameObject.SetActive(false);
         }
-            
     }
 
     private Vector3 GetConvertedPosition(PointerEventData eventData)
