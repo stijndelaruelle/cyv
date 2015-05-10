@@ -36,7 +36,7 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
     private GameObject m_Hex = null; //Only used for the main color of the VisualTile
 
     [SerializeField]
-    private GameObject m_HexBorder = null; //Used for the border color of the VisualTile
+    private HexBorder m_HexBorder = null; //Used for the border color of the VisualTile
 
     [SerializeField]
     private Image m_MovementMarker = null; //Used to show the movement
@@ -74,7 +74,7 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
         m_Neighbours = new VisualTile[BoardState.DIR_NUM];
 
         if (m_HexBorder != null)
-            m_HexBorder.SetActive(false);
+            m_HexBorder.gameObject.SetActive(false);
 
         if (m_MovementMarker != null)
             m_MovementMarker.gameObject.SetActive(false);
@@ -151,7 +151,7 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
 
     public void HighlightMovementHistory(bool enable, bool from)
     {
-        Color color = Color.magenta;
+        HexBorder.HexBorderMaterial hexMaterial = HexBorder.HexBorderMaterial.None;
         if (enable)
         {
             if (from)
@@ -164,7 +164,7 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
                     m_FromTile.HighlightMovementHistory(false, from);
                 }
 
-                color = new Color(1.0f, 0.0f, 1.0f, 1.0f);
+                hexMaterial = HexBorder.HexBorderMaterial.From;
                 m_FromTile = this;
             }
             else
@@ -177,17 +177,17 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
                     m_ToTile.HighlightMovementHistory(false, from);
                 }
 
-                color = new Color(0.0f, 1.0f, 1.0f, 1.0f);
+                hexMaterial = HexBorder.HexBorderMaterial.To;
                 m_ToTile = this;
             }
         }
         else
         {
             //Don't reset the from & to tiles
-            color = m_OriginalColor;
+            hexMaterial = HexBorder.HexBorderMaterial.None;
         }
 
-        SetBorderColor(color);
+        SetBorderMaterial(hexMaterial);
     }
 
     public void Highlight(bool enable, PlayerColor playerColor, bool showMarker)
@@ -268,7 +268,7 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
 
         Color color = new Color(0.0f, 0.0f, 0.0f, 0.75f);
         if (!enable) { color = m_OriginalColor; }
-        SetBorderColor(color);
+        SetBorderMaterial(HexBorder.HexBorderMaterial.Promote);
 
         if (enable)
         {
@@ -276,19 +276,17 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
         }
     }
 
-    public void SetBorderColor(Color color)
+    public void SetBorderMaterial(HexBorder.HexBorderMaterial hexMaterial)
     {
-        //Avoid useless overdraw
-        if (m_OriginalColor == color)
-        {
-            m_HexBorder.SetActive(false);
-            return;
-        }
-
         if (m_HexBorder != null)
         {
-            m_HexBorder.GetComponent<Image>().color = color;
-            m_HexBorder.SetActive(true);
+            if (hexMaterial == HexBorder.HexBorderMaterial.None)
+            {
+                m_HexBorder.gameObject.SetActive(false);
+            }
+
+            m_HexBorder.SetMaterial(hexMaterial);
+            m_HexBorder.gameObject.SetActive(true);
         }
     }
 

@@ -80,7 +80,7 @@ public class VisualBoard : MonoBehaviour
                 rectTransform = obj.GetComponent<RectTransform>();
                 rectTransform.SetParent(gameObject.GetComponent<RectTransform>()); //Parent this to us
                 rectTransform.anchoredPosition = new Vector2(x, startY);
-                rectTransform.localScale = new Vector2(1.0f, 1.0f); //Always resets for some reason
+                rectTransform.localScale = new Vector3(1.0f, 1.0f, 1.0f); //Always resets for some reason
 
                 VisualTile newTile = obj.GetComponent<VisualTile>();
                 newTile.SetColor(m_Colors[color]);

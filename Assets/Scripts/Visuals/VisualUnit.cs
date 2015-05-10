@@ -267,7 +267,7 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         if (m_DragIndicator != null)
         {
             m_DragIndicator.gameObject.SetActive(true);
-            m_DragIndicator.position = newPoint;
+            m_DragIndicator.position = new Vector3(newPoint.x, newPoint.y, -0.01f);
         }
     }
 
@@ -309,7 +309,7 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
                 {
                     m_DragIndicator.gameObject.SetActive(true);
                     m_DragIndicator.localScale = Vector3.one;
-                    m_DragIndicator.position = go.transform.position;
+                    m_DragIndicator.position = new Vector3(go.transform.position.x, go.transform.position.y, -0.01f);
                 }
                 else
                 {
