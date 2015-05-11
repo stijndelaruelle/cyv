@@ -393,6 +393,12 @@ public class VisualBoard : MonoBehaviour
         }
 
         //Highlight
+        if (VisualTile.m_FromTile != null)
+            m_VisualTiles[VisualTile.m_FromTile.ID].HighlightMovementHistory(false, true);
+
+        if (VisualTile.m_ToTile != null)
+            m_VisualTiles[VisualTile.m_ToTile.ID].HighlightMovementHistory(false, false);
+
         if (boardState.FromTileID != -1)
             m_VisualTiles[boardState.FromTileID].HighlightMovementHistory(true, true);
 

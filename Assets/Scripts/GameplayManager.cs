@@ -304,12 +304,12 @@ public class GameplayManager : MonoBehaviour
         }
 
         //If a king is dead, the game is done!
-        if (m_GameState == GameState.Game)
+        if (m_GameState == GameState.Game || m_GameState == GameState.EndGame)
         {
             if (m_BoardStates[m_CurrentBoardStateID].IsKingDead(PlayerColor.White) ||
                 m_BoardStates[m_CurrentBoardStateID].HasOnlyKing(PlayerColor.White))
             {
-                Debug.Log("Black won!");
+                Debug.Log("Red won!");
                 SetGameState(GameState.EndGame);
                 return;
             }
@@ -622,17 +622,20 @@ public class GameplayManager : MonoBehaviour
 
                     //If 1 player was a computer, show win/lose
                     PlayerColor winner = PlayerColor.White;
+                    String strWinner = "WHITE";
 
                     if (m_VisualBoard.CurrentBoardState.IsKingDead(PlayerColor.White) ||
                         m_VisualBoard.CurrentBoardState.HasOnlyKing(PlayerColor.White))
                     {
                         winner = PlayerColor.Black;
+                        strWinner = "CRIMSON";
                     }
 
                     if (m_VisualBoard.CurrentBoardState.IsKingDead(PlayerColor.Black) ||
                         m_VisualBoard.CurrentBoardState.HasOnlyKing(PlayerColor.Black))
                     {
                         winner = PlayerColor.White;
+                        strWinner = "WHITE";
                     }
 
                     if (NumAIPlayers() == 1)
@@ -644,7 +647,7 @@ public class GameplayManager : MonoBehaviour
                     //If both players where humans or AI's just show the color
                     else
                     {
-                        text = winner.ToString().ToUpper() + " WINS!";     
+                        text = strWinner + " WINS!";     
                     }
 
                     m_EndGameText.text = text;
