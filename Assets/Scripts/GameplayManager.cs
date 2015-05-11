@@ -98,6 +98,11 @@ public class GameplayManager : MonoBehaviour
         get { return m_AIType; }
     }
 
+    public PlayerType CurrentPlayerType
+    {
+        get { return m_PlayerTypes[(int)m_CurrentPlayer]; }
+    }
+
     private bool m_AlreadyFinishedGame = false;
 
     //Setting up new game
@@ -241,7 +246,10 @@ public class GameplayManager : MonoBehaviour
     public void SaveBoardState()
     {
         //Save the current board
-        m_VisualBoard.SaveBoardState();
+        if (m_PlayerTypes[(int)m_CurrentPlayer] != PlayerType.AI) //Not required and skrews up the promotion unit indicator
+        {
+            m_VisualBoard.SaveBoardState();
+        }
 
         //Clear all the extra's
         if (m_CurrentBoardStateID < m_BoardStates.Count - 1)

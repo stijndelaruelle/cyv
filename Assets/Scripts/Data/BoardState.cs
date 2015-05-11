@@ -745,9 +745,6 @@ public class BoardState : ThreadedJob
             }
         }
         #endregion
-
-        //If a promotion happened set the tile here
-        //m_PromotionTileID
     }
 
     public Tile GetTile(int tileID)

@@ -49,6 +49,9 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         m_DraggedUnit = unit;
 
         //Only enlarge units that we actually can pick up
+        if (GameplayManager.Instance.CurrentPlayerType == PlayerType.AI)
+            return;
+
         if (unit != null)
         {
             if (GameplayManager.Instance.CurrentPlayer == m_PlayerColor || MenuManager.Instance.IsInManual())
@@ -69,6 +72,17 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         if (transform.parent == m_ParentTransform)
         {
             SetTile(m_Tile);
+        }
+
+        if (m_DragIndicator != null && m_DragIndicator.gameObject.activeSelf)
+        {
+            Vector3 newPoint = GetConvertedPosition();
+            transform.position = newPoint;
+
+            if (m_SpriteTransform != null)
+                m_SpriteTransform.position = new Vector3(newPoint.x, newPoint.y, newPoint.z - 0.02f);
+
+            m_DragIndicator.gameObject.SetActive(false);
         }
     }
 
@@ -159,7 +173,8 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
             VisualTile.UnHighlightMovementHistory(true);
             VisualTile.UnHighlightMovementHistory(false);
         }
-        else
+
+        if (!enable && GameplayManager.Instance.GameState != GameState.Promotion)
         {
             VisualTile.HighlightMovementHistory(true);
             VisualTile.HighlightMovementHistory(false);
@@ -208,14 +223,19 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         }
 
         //This means the user used the click & click method to place units
-        if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor && !MenuManager.Instance.IsInManual())
+        if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor &&
+            GameplayManager.Instance.CurrentPlayerType != PlayerType.AI && 
+            !MenuManager.Instance.IsInManual())
         {
             //If we are moving a character here, 
             if (m_DraggedUnit != null)
             {
-                if (m_DraggedUnit.GetPlayerColor() == GameplayManager.Instance.CurrentPlayer || MenuManager.Instance.IsInManual())
+                if (GameplayManager.Instance.CurrentPlayerType != PlayerType.AI)
                 {
-                    m_Tile.OnPointerDown(eventData);
+                    if (m_DraggedUnit.GetPlayerColor() == GameplayManager.Instance.CurrentPlayer || MenuManager.Instance.IsInManual())
+                    {
+                        m_Tile.OnPointerDown(eventData);
+                    }
                 }
             }
             //If we're just checking the movement range
@@ -241,6 +261,9 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         if (GameplayManager.Instance.GameState == GameState.Promotion && !MenuManager.Instance.IsInManual())
             return;
 
+        if (GameplayManager.Instance.CurrentPlayerType == PlayerType.AI)
+            return;
+
         if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor && !MenuManager.Instance.IsInManual())
             return;
 
@@ -254,15 +277,20 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         EnableDragging(false);
         m_IsDragged = true;
 
-        Vector3 newPoint = GetConvertedPosition(eventData);
+        Vector3 newPoint = GetConvertedPosition();
         transform.position = newPoint;
 
         if (m_SpriteTransform != null)
         {
             float offset = 1.0f;
-            if (transform.rotation.z != 0.0f) offset = -1.0f;
+            if (transform.rotation.z != 0.0f &&
+                GameplayManager.Instance.GameMode == GameMode.MirroredPlay &&
+                GameplayManager.Instance.NumAIPlayers() == 0)
+            {
+                offset = -1.0f;
+            }
 
-            m_SpriteTransform.position = new Vector3(newPoint.x, newPoint.y + offset, newPoint.z);
+            m_SpriteTransform.position = new Vector3(newPoint.x, newPoint.y + offset, newPoint.z - 0.02f);
         }
 
         if (m_DragIndicator != null)
@@ -278,10 +306,13 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         if (GameplayManager.Instance.GameState == GameState.Promotion && !MenuManager.Instance.IsInManual())
             return;
 
+        if (GameplayManager.Instance.CurrentPlayerType == PlayerType.AI)
+            return;
+
         if (GameplayManager.Instance.CurrentPlayer != m_PlayerColor && !MenuManager.Instance.IsInManual())
             return;
 
-        Vector3 newPoint = GetConvertedPosition(eventData);
+        Vector3 newPoint = GetConvertedPosition();
         transform.position = newPoint;
 
         if (m_SpriteTransform != null)
@@ -294,7 +325,7 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
                 offset = -1.0f;
             }
 
-            m_SpriteTransform.position = new Vector3(newPoint.x, newPoint.y + offset, newPoint.z);
+            m_SpriteTransform.position = new Vector3(newPoint.x, newPoint.y + offset, newPoint.z - 0.02f);
         }
 
         if (m_DragIndicator != null)
@@ -330,23 +361,12 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     {
         //We should always be able to deselect, otherwise showing the enemies movement range bugs out on the last used unit.
         Select(null);
-
-        if (m_DragIndicator != null && m_DragIndicator.gameObject.activeSelf)
-        {
-            Vector3 newPoint = GetConvertedPosition(eventData);
-            transform.position = newPoint;
-
-            if (m_SpriteTransform != null)
-                m_SpriteTransform.position = newPoint;
-
-            m_DragIndicator.gameObject.SetActive(false);
-        }
     }
 
-    private Vector3 GetConvertedPosition(PointerEventData eventData)
+    private Vector3 GetConvertedPosition()
     {
         Vector2 localPoint;
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(m_CanvasTransform, Input.mousePosition, eventData.pressEventCamera, out localPoint);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(m_CanvasTransform, Input.mousePosition, Camera.main, out localPoint);
         return m_CanvasTransform.TransformPoint(localPoint);
     }
 

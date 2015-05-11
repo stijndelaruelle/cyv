@@ -23,7 +23,7 @@ public class HexBorder : MonoBehaviour
 	void Update() 
     {
         Vector2 currentOffset = m_Renderer.material.mainTextureOffset;
-        currentOffset.x += Time.deltaTime;
+        currentOffset.x += Time.deltaTime * m_RotationSpeed;
 
         m_Renderer.material.mainTextureOffset = currentOffset;
 	}

@@ -313,6 +313,8 @@ public class VisualBoard : MonoBehaviour
         if (m_CurrentBoardState == null) return;
 
         bool promote = true;
+        CurrentBoardState.PromotionTileID = -1;
+
         for (int i = 0; i < m_VisualUnits.Count; ++i)
         {
             //The tile this unit used to be on (on the data container side)
@@ -392,13 +394,14 @@ public class VisualBoard : MonoBehaviour
             }
         }
 
-        //Highlight
+        //Reset highlight
         if (VisualTile.m_FromTile != null)
             m_VisualTiles[VisualTile.m_FromTile.ID].HighlightMovementHistory(false, true);
 
         if (VisualTile.m_ToTile != null)
             m_VisualTiles[VisualTile.m_ToTile.ID].HighlightMovementHistory(false, false);
 
+        //Add lightlight
         if (boardState.FromTileID != -1)
             m_VisualTiles[boardState.FromTileID].HighlightMovementHistory(true, true);
 
@@ -409,6 +412,7 @@ public class VisualBoard : MonoBehaviour
         {
             //Play a nice particle effect & sound that indicates the promtion
             m_VisualTiles[boardState.PromotionTileID].HighlightPromotion(true);
+            m_CurrentBoardState.PromotionTileID = boardState.PromotionTileID;
         }
 
         if (boardState.FromTileID == -1 && boardState.ToTileID == -1)
@@ -534,6 +538,19 @@ public class VisualBoard : MonoBehaviour
 
     public void OnAllowPromition(PlayerColor playerColor)
     {
+        //Don't show previous move here
+        if (m_CurrentBoardState.FromTileID != -1 && m_CurrentBoardState.ToTileID != -1)
+        {
+            VisualTile.UnHighlightMovementHistory(true);
+            VisualTile.UnHighlightMovementHistory(false);
+        }
+
+        if (m_CurrentBoardState.PromotionTileID != -1)
+        {
+            //Play a nice particle effect & sound that indicates the promtion
+            m_VisualTiles[m_CurrentBoardState.PromotionTileID].HighlightPromotion(false);
+        }
+
         //This player is allowed to promote a unit
         bool foundUnits = HighlightUpgradableUnits(playerColor, true);
 

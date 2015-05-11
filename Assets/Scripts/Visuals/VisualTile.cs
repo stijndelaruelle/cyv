@@ -284,6 +284,7 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
             if (hexMaterial == HexBorder.HexBorderMaterial.None)
             {
                 m_HexBorder.gameObject.SetActive(false);
+                return;
             }
 
             m_HexBorder.SetMaterial(hexMaterial);
@@ -349,6 +350,9 @@ public class VisualTile : MonoBehaviour, IPointerDownHandler, IDropHandler
     private void PlaceUnit()
     {
         if (VisualUnit.m_DraggedUnit == null)
+            return;
+
+        if (GameplayManager.Instance.CurrentPlayerType == PlayerType.AI)
             return;
 
         if (GameplayManager.Instance.CurrentPlayer == VisualUnit.m_DraggedUnit.GetPlayerColor() || MenuManager.Instance.IsInManual())
