@@ -389,6 +389,7 @@ public class BoardState : ThreadedJob
         m_ThreadBeta = beta;
         m_ThreadId = id;
 
+        //NOT THREADING
         ThreadFunction();
 
         if (id == 0)
@@ -396,6 +397,7 @@ public class BoardState : ThreadedJob
             OnThreadFinished();
         }
 
+        //REAL THREADING
         //if (id != 0)
         //{
         //    ThreadFunction();

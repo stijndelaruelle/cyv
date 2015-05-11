@@ -53,6 +53,7 @@ public class GameplayManager : MonoBehaviour
     public VoidDelegate OnNewGame;
     public GameStateDelegate OnChangeGameState;
     public PlayerColorDelegate OnChangePlayer;
+    public VoidDelegate OnNewGameSetupChange;
 
     //------------------
     // Datamembers
@@ -103,7 +104,7 @@ public class GameplayManager : MonoBehaviour
     private NewGameSetup m_NewGameSetup;
     public NewGameSetup NewGameSetup
     {
-        get { return m_NewGameSetup;  }
+        get { return m_NewGameSetup; }
     }
 
     //Singleton
@@ -299,6 +300,7 @@ public class GameplayManager : MonoBehaviour
         if (m_GameState == GameState.Setup && m_CurrentPlayer == PlayerColor.Black)
         {
             SetGameState(GameState.Game);
+            return;
         }
 
         //If a king is dead, the game is done!
@@ -309,6 +311,7 @@ public class GameplayManager : MonoBehaviour
             {
                 Debug.Log("Black won!");
                 SetGameState(GameState.EndGame);
+                return;
             }
 
             if (m_BoardStates[m_CurrentBoardStateID].IsKingDead(PlayerColor.Black) ||
@@ -316,6 +319,7 @@ public class GameplayManager : MonoBehaviour
             {
                 Debug.Log("White won!");
                 SetGameState(GameState.EndGame);
+                return;
             }
         }
     }
@@ -382,7 +386,7 @@ public class GameplayManager : MonoBehaviour
     {
         if (m_GameState == GameState.Game)
         {
-            AIMoveLogic();
+            StartCoroutine(AIMoveLogicRoutine());
         }
         else
         {
@@ -534,6 +538,13 @@ public class GameplayManager : MonoBehaviour
             m_VisualBoard.LoadBoardState(m_VisualBoard.CurrentBoardState);
             SubmitMove();
         }
+    }
+
+    private IEnumerator AIMoveLogicRoutine()
+    {
+        yield return new WaitForSeconds(0.2f);
+
+        AIMoveLogic();
     }
 
     private void AIMoveLogic()
@@ -701,5 +712,11 @@ public class GameplayManager : MonoBehaviour
             return;
 
         m_VisualBoard.CurrentBoardState.Update();
+    }
+
+    public void UpdateNewGameSetup()
+    {
+        if (OnNewGameSetupChange != null)
+            OnNewGameSetupChange();
     }
 }

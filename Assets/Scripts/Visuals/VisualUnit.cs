@@ -287,7 +287,12 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         if (m_SpriteTransform != null)
         {
             float offset = 1.0f;
-            if (transform.rotation.z != 0.0f) offset = -1.0f;
+            if (transform.rotation.z != 0.0f &&
+                GameplayManager.Instance.GameMode == GameMode.MirroredPlay &&
+                GameplayManager.Instance.NumAIPlayers() == 0)
+            {
+                offset = -1.0f;
+            }
 
             m_SpriteTransform.position = new Vector3(newPoint.x, newPoint.y + offset, newPoint.z);
         }

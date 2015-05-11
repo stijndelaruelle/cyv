@@ -131,7 +131,10 @@ public class MenuManager : MonoBehaviour
         m_InGamePanel.SetActive(true);
 
         //Otherwise the end game message may dissapear
-        GameplayManager.Instance.CheckGameStates();
+        if (GameplayManager.Instance.GameState != GameState.Setup)
+        {
+            GameplayManager.Instance.CheckGameStates();
+        }
 
         AnalyticsManager.Instance.LogScreen("Resume");
     }

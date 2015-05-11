@@ -69,5 +69,7 @@ public class DifficultyChanger : MonoBehaviour
 
         //Set the text label
         m_TextLabel.text = m_VisualDifficultyType[m_ID].ToString();
+
+        GameplayManager.Instance.UpdateNewGameSetup();
     }
 }

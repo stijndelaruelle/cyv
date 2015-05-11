@@ -28,5 +28,7 @@ public class PlayerTypeSwitch : MonoBehaviour
         {
             GameplayManager.Instance.NewGameSetup.m_BlackPlayerType = playerType;
         }
+
+        GameplayManager.Instance.UpdateNewGameSetup();
     }
 }
