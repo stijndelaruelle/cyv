@@ -28,7 +28,7 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
 
     private UnitDefinition m_UnitDefinition = null; //Used for movement ranges etc.
     private PlayerColor m_PlayerColor = PlayerColor.White;
-
+    
     private Transform m_ParentTransform;
     private bool m_IsDragged = false; //Used to distinguish between click movement & drag movement
     public bool IsDragged
@@ -107,7 +107,7 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         transform.position = new Vector3(transform.position.x, transform.position.y, -1.0f);
         transform.localScale = new Vector3(1.0f, 1.0f, 1.0f); //For some reason this resets
 
-        if (!m_IsAnimating && m_Tile != tile)
+        if (!m_IsAnimating && m_Tile != null && m_Tile != tile)
         {
             StartCoroutine(AnimateUnitRoutine(tile.transform.position));
         }
@@ -208,6 +208,7 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
 
     public void Show(bool state)
     {
+        //m_SpriteTransform.gameObject.SetActive(state);
         gameObject.SetActive(state);
     }
 
@@ -249,7 +250,7 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         while (Math.Sign(dist.x) == Mathf.Sign(dir.x) && Math.Sign(dist.y) == Mathf.Sign(dir.y))
         {
             //Yield here so we don't see the final "snap" back
-            yield return new WaitForEndOfFrame();
+            yield return null;
 
             tempPos = new Vector3(tempPos.x + (dir.x * Time.deltaTime * speed), tempPos.y + (dir.y * Time.deltaTime * speed), -1.0f);
             m_SpriteTransform.position = tempPos;
@@ -260,12 +261,10 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         //Once reached, snap again to the 100% correct values
         m_SpriteTransform.SetParent(prevParent.transform);
 
-        m_SpriteTransform.localPosition = new Vector3(0.0f, 0.0f, -1.0f); //Center yourself on the tile
+        m_SpriteTransform.localPosition = new Vector3(0.0f, 0.0f, -2.0f); //Center yourself on the tile
         m_SpriteTransform.localScale = new Vector3(1.0f, 1.0f, 1.0f); //And reset scale, because it always screws up otherwise.
 
         m_IsAnimating = false;
-
-        yield return null;
     }
 
     //----------------

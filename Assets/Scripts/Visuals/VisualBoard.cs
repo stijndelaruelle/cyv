@@ -440,8 +440,8 @@ public class VisualBoard : MonoBehaviour
             if (m_VisualUnits[i].GetPlayerColor() == playerColor)
             {
                 //Don't show tier 3 units, unless on the playing field
-                if (m_VisualUnits[i].GetUnitDefinition().Tier == 3 &&
-                    m_VisualUnits[i].GetTile() == m_VisualUnits[i].GetReserveTile())
+                if (GameplayManager.Instance.GameState == GameState.Setup &&
+                    m_VisualUnits[i].GetUnitDefinition().Tier == 3)
                 {
                     m_VisualUnits[i].Show(false);
                 }
@@ -614,10 +614,8 @@ public class VisualBoard : MonoBehaviour
                 //Now swap it with the current one
                 VisualTile visualTile = visualUnit.GetTile();
                 visualUnit.SetTile(null);
-                visualUnit.Show(false);
-
                 newUnit.SetTile(visualTile);
-                newUnit.Show(true);
+                
                 break;
             }
         }
@@ -653,5 +651,11 @@ public class VisualBoard : MonoBehaviour
         }
 
         return false;
+    }
+
+    public void Reset()
+    {
+        VisualTile.m_FromTile = null;
+        VisualTile.m_ToTile = null;
     }
 }

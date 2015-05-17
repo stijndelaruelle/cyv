@@ -172,6 +172,7 @@ public class GameplayManager : MonoBehaviour
         BoardState boardState = new BoardState();
         boardState.GenerateDefaultState(BoardState.BOARD_SIZE);
 
+        m_VisualBoard.Reset();
         m_VisualBoard.SetBoardState(boardState);
 
         //Flip the board only if the player is black & we're facing a white AI
@@ -735,5 +736,10 @@ public class GameplayManager : MonoBehaviour
     {
         if (OnNewGameSetupChange != null)
             OnNewGameSetupChange();
+    }
+
+    public bool AreUnitsAnimating()
+    {
+        return m_VisualBoard.AreUnitsAnimating();
     }
 }

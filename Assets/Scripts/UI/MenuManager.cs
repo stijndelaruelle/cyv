@@ -66,6 +66,9 @@ public class MenuManager : MonoBehaviour
         if (m_MainMenuPanel == null)
             return;
 
+        if (GameplayManager.Instance.AreUnitsAnimating())
+            return;
+
         HideAll();
         ShowCommon(true);
         m_MainMenuPanel.SetActive(true);
