@@ -301,7 +301,7 @@ public class VisualBoard : MonoBehaviour
 
     public void SetBoardState(BoardState boardState)
     {
-        //Literally set the referebce, don't copy. Very dangerous, use with caution!!
+        //Literally set the referece, don't copy. Very dangerous, use with caution!!
         m_CurrentBoardState = boardState;
         LoadBoardState(m_CurrentBoardState);
         SaveBoardState();
@@ -445,6 +445,14 @@ public class VisualBoard : MonoBehaviour
                 {
                     m_VisualUnits[i].Show(false);
                 }
+
+                //Show all other unit when not on the playing field
+                else if (m_VisualUnits[i].GetTile() == m_VisualUnits[i].GetReserveTile())
+                {
+                    m_VisualUnits[i].Show(true);
+                }
+
+                //Rest is as requrested
                 else
                 {
                     m_VisualUnits[i].Show(state);
@@ -632,5 +640,18 @@ public class VisualBoard : MonoBehaviour
         }
 
         return true;
+    }
+
+    public bool AreUnitsAnimating()
+    {
+        foreach (VisualUnit unit in m_VisualUnits)
+        {
+            if (unit.IsAnimating)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

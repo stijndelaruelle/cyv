@@ -222,9 +222,9 @@ public class GameplayManager : MonoBehaviour
         //2 = white AI, black player,
         //3 = both Ai
         if (m_PlayerTypes[0] == PlayerType.Human && m_PlayerTypes[1] == PlayerType.Human) { value = 0; }
-        if (m_PlayerTypes[0] == PlayerType.Human && m_PlayerTypes[1] == PlayerType.AI)    { value = 1; }
-        if (m_PlayerTypes[0] == PlayerType.AI && m_PlayerTypes[1] == PlayerType.Human)    { value = 2; }
-        if (m_PlayerTypes[0] == PlayerType.AI && m_PlayerTypes[1] == PlayerType.AI)       { value = 3; }
+        if (m_PlayerTypes[0] == PlayerType.Human && m_PlayerTypes[1] == PlayerType.AI) { value = 1; }
+        if (m_PlayerTypes[0] == PlayerType.AI && m_PlayerTypes[1] == PlayerType.Human) { value = 2; }
+        if (m_PlayerTypes[0] == PlayerType.AI && m_PlayerTypes[1] == PlayerType.AI) { value = 3; }
 
         AnalyticsManager.Instance.LogEvent("Default", "New Game", "Started a new game.", value);
 
@@ -281,6 +281,17 @@ public class GameplayManager : MonoBehaviour
 
     public void SubmitMove()
     {
+        StartCoroutine(SubmitMoveRoutine());
+    }
+
+    public IEnumerator SubmitMoveRoutine()
+    {
+        //Wait until all units have stopped animating!
+        while (m_VisualBoard.AreUnitsAnimating())
+        {
+            yield return new WaitForSeconds(0.1f);
+        }
+
         SaveBoardState();
 
         CheckGameStates();
@@ -291,7 +302,7 @@ public class GameplayManager : MonoBehaviour
         m_VisualBoard.LoadBoardState(m_VisualBoard.CurrentBoardState);
 
         if (m_GameState == GameState.EndGame)
-            return;
+            yield return null;
 
         //If the new player is an AI, let him think!
         if (m_PlayerTypes[(int)m_CurrentPlayer] == PlayerType.AI)
@@ -340,6 +351,10 @@ public class GameplayManager : MonoBehaviour
         //Another dirty fix
         if (m_GameState == GameState.Promotion) return;
 
+        //If the game was done, now it's not anymore!
+        if (m_GameState == GameState.EndGame)
+            SetGameState(GameState.Game);
+
         m_CurrentBoardStateID -= 1;
         SwapTurns();
         LoadBoardState();
@@ -347,10 +362,6 @@ public class GameplayManager : MonoBehaviour
         //Cheap fix, otherwise after promoting & undoing we get promoted units in the bank.
         m_VisualBoard.ShowUnits(PlayerColor.White, true);
         m_VisualBoard.ShowUnits(PlayerColor.Black, true);
-
-        //If the game was done, now it's not anymore!
-        if (m_GameState == GameState.EndGame)
-            SetGameState(GameState.Game);
     }
 
     public void RedoMove()
@@ -371,13 +382,14 @@ public class GameplayManager : MonoBehaviour
         if (OnChangePlayer != null)
             OnChangePlayer(m_CurrentPlayer);
 
-        //m_VisualBoard.EnableUnitSelection(m_CurrentPlayer, true);
-        //m_VisualBoard.EnableUnitSelection(OtherPlayer(m_CurrentPlayer), false);
-
         if (m_GameState == GameState.Setup)
         {
             m_VisualBoard.ShowUnits(m_CurrentPlayer, true);
-            m_VisualBoard.ShowUnits(OtherPlayer(m_CurrentPlayer), false);
+
+            if (m_PlayerTypes[(int)m_CurrentPlayer] != PlayerType.AI)
+            {
+                m_VisualBoard.ShowUnits(OtherPlayer(m_CurrentPlayer), false);
+            }
         }
 
         //Flip the board if required
@@ -406,7 +418,7 @@ public class GameplayManager : MonoBehaviour
 
             //Load some test data
             int randSetup = UnityEngine.Random.Range(0, 100);
-            int setupID = 1;
+            int setupID = 0;
             if (randSetup > 50)
                 setupID = 1;
 
@@ -565,17 +577,11 @@ public class GameplayManager : MonoBehaviour
         currentBoardState.SetCurrentPlayer(m_CurrentPlayer);
 
         //Calculate all the moves
-        //DateTime time = DateTime.Now;
         currentBoardState.ProcessAllMoves(m_AIBoardStates, int.MinValue, int.MaxValue, 0); //Runs on a separat thread
     }
 
     private void OnAILogicFinished()
     {
-        //DateTime time2 = DateTime.Now;
-
-        //double ms = (time2 - time).TotalMilliseconds;
-        //Debug.Log("Processing all the moves for " + m_AIMoveDepth + " moves took " + ms + "ms");
-
         //Now we found our best, let's do that
         BoardState currentBoardState = m_VisualBoard.CurrentBoardState;
         currentBoardState.ProcessBestMove();
@@ -600,7 +606,7 @@ public class GameplayManager : MonoBehaviour
             case GameState.Setup:
                 {
                     m_VisualBoard.ShowUnits(m_CurrentPlayer, true);
-                    m_VisualBoard.ShowUnits(OtherPlayer(m_CurrentPlayer), false);
+                    m_VisualBoard.ShowUnits(OtherPlayer(m_CurrentPlayer), true);
 
                     MenuManager.Instance.ShowEndGameMenu(false);
 

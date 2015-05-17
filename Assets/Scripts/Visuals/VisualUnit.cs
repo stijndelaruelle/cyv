@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using System;
 
 public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
@@ -37,6 +38,11 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
     }
 
     private RectTransform m_CanvasTransform; //The canvas transform, used for drag & drop
+    private bool m_IsAnimating = false;
+    public bool IsAnimating
+    {
+        get { return m_IsAnimating; }
+    }
 
     public void Awake()
     {
@@ -97,11 +103,16 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
             ShowMovementRange(false);
         }
 
-        m_Tile = tile;
-
         transform.SetParent(tile.GetUnitParent());
         transform.position = new Vector3(transform.position.x, transform.position.y, -1.0f);
         transform.localScale = new Vector3(1.0f, 1.0f, 1.0f); //For some reason this resets
+
+        if (!m_IsAnimating && m_Tile != tile)
+        {
+            StartCoroutine(AnimateUnitRoutine(tile.transform.position));
+        }
+
+        m_Tile = tile;
     }
 
     public void SetReserveTile(VisualTile reserveTile)
@@ -206,6 +217,55 @@ public class VisualUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler,
         if (state) angle = 180.0f;
 
         gameObject.transform.localRotation = Quaternion.Euler(new Vector3(0.0f, 0.0f, angle));
+    }
+
+    private IEnumerator AnimateUnitRoutine(Vector3 newPos)
+    {
+        if (m_IsAnimating)
+            yield return null;
+
+        Vector3 prevPos = m_SpriteTransform.position;
+
+        if (prevPos == newPos)
+            yield return null;
+
+        m_IsAnimating = true;
+
+        //Calculate the direction we're going to be moving in
+        Vector3 dir = newPos - prevPos;
+        dir.Normalize();
+
+        //Set starting values
+        GameObject prevParent = m_SpriteTransform.transform.parent.gameObject;
+        m_SpriteTransform.position = prevPos;
+        m_SpriteTransform.SetParent(m_ParentTransform); //Set parent to the board so you can see us!
+
+        //Calculating the distance from the target
+        Vector3 dist = newPos - prevPos;
+        float speed = 10.0f;
+
+        //Loop until we reached the correct point
+        Vector3 tempPos = m_SpriteTransform.position;
+        while (Math.Sign(dist.x) == Mathf.Sign(dir.x) && Math.Sign(dist.y) == Mathf.Sign(dir.y))
+        {
+            //Yield here so we don't see the final "snap" back
+            yield return new WaitForEndOfFrame();
+
+            tempPos = new Vector3(tempPos.x + (dir.x * Time.deltaTime * speed), tempPos.y + (dir.y * Time.deltaTime * speed), -1.0f);
+            m_SpriteTransform.position = tempPos;
+            
+            dist = newPos - tempPos;
+        }
+
+        //Once reached, snap again to the 100% correct values
+        m_SpriteTransform.SetParent(prevParent.transform);
+
+        m_SpriteTransform.localPosition = new Vector3(0.0f, 0.0f, -1.0f); //Center yourself on the tile
+        m_SpriteTransform.localScale = new Vector3(1.0f, 1.0f, 1.0f); //And reset scale, because it always screws up otherwise.
+
+        m_IsAnimating = false;
+
+        yield return null;
     }
 
     //----------------
